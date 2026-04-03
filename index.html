@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Our Little World 🌸</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=Noto+Serif+JP:wght@300&display=swap" rel="stylesheet">
+<!--
+  ╔══════════════════════════════════════════════════════════╗
+  ║         SUPABASE SQL — run this in SQL Editor            ║
+  ╠══════════════════════════════════════════════════════════╣
+  ║                                                          ║
+  ║  CREATE TABLE folders (                                  ║
+  ║    id         UUID DEFAULT gen_random_uuid() PRIMARY KEY,║
+  ║    name       TEXT NOT NULL,                             ║
+  ║    emoji      TEXT DEFAULT '📸',                        ║
+  ║    color      TEXT DEFAULT '#ffeef2',                    ║
+  ║    created_at TIMESTAMPTZ DEFAULT now()                  ║
+  ║  );                                                      ║
+  ║                                                          ║
+  ║  CREATE TABLE photos (                                   ║
+  ║    id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,║
+  ║    folder_id   UUID REFERENCES folders(id) ON DELETE CASCADE,║
+  ║    file_path   TEXT NOT NULL,                            ║
+  ║    caption     TEXT DEFAULT '',                          ║
+  ║    uploaded_at TIMESTAMPTZ DEFAULT now()                 ║
+  ║  );                                                      ║
+  ║                                                          ║
+  ║  CREATE TABLE milestones (                               ║
+  ║    id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,║
+  ║    title       TEXT NOT NULL,                            ║
+  ║    description TEXT DEFAULT '',                          ║
+  ║    emoji       TEXT DEFAULT '🌸',                       ║
+  ║    date        DATE NOT NULL,                            ║
+  ║    created_at  TIMESTAMPTZ DEFAULT now()                 ║
+  ║  );                                                      ║
+  ║                                                          ║
+  ║  CREATE TABLE notes (                                    ║
+  ║    id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,║
+  ║    from_name   TEXT DEFAULT 'Us',                        ║
+  ║    emoji       TEXT DEFAULT '💌',                       ║
+  ║    text        TEXT NOT NULL,                            ║
+  ║    unlock_date DATE DEFAULT NULL,                        ║
+  ║    created_at  TIMESTAMPTZ DEFAULT now()                 ║
+  ║  );                                                      ║
+  ║                                                          ║
+  ║  CREATE TABLE bucketlist (                               ║
+  ║    id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,║
+  ║    text        TEXT NOT NULL,                            ║
+  ║    done        BOOLEAN DEFAULT false,                    ║
+  ║    created_at  TIMESTAMPTZ DEFAULT now()                 ║
+  ║  );                                                      ║
+  ║                                                          ║
+  ║  -- Disable RLS on all tables (app uses password auth)   ║
+  ║  ALTER TABLE folders    DISABLE ROW LEVEL SECURITY;      ║
+  ║  ALTER TABLE photos     DISABLE ROW LEVEL SECURITY;      ║
+  ║  ALTER TABLE milestones DISABLE ROW LEVEL SECURITY;      ║
+  ║  ALTER TABLE notes      DISABLE ROW LEVEL SECURITY;      ║
+  ║  ALTER TABLE bucketlist DISABLE ROW LEVEL SECURITY;      ║
+  ║                                                          ║
+  ╠══════════════════════════════════════════════════════════╣
+  ║  STORAGE BUCKET: create bucket named "photos"            ║
+  ║  Set it to PUBLIC.                                       ║
+  ║                                                          ║
+  ║  Then run this in SQL Editor:                            ║
+  ║                                                          ║
+  ║  INSERT INTO storage.buckets (id, name, public)          ║
+  ║  VALUES ('photos', 'photos', true)                       ║
+  ║  ON CONFLICT DO NOTHING;                                 ║
+  ║                                                          ║
+  ║  CREATE POLICY "public_all" ON storage.objects           ║
+  ║  FOR ALL USING (bucket_id = 'photos')                    ║
+  ║  WITH CHECK (bucket_id = 'photos');                      ║
+  ║                                                          ║
+  ╚══════════════════════════════════════════════════════════╝
+-->
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --pink:#ffc0cb;--pink-light:#ffd6de;--pink-pale:#fff0f3;--pink-deep:#e8899a;
+  --cream:#fff8f9;--white:#fff;--text:#2e1218;--text-mid:#7a3f4f;--text-soft:#c0909a;
+}
+html,body{height:100%;background:linear-gradient(155deg,#ffe4ea,#ffd6de 50%,#ffedf0);display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
+.phone{width:min(390px,100vw);height:min(844px,100vh);background:var(--cream);border-radius:44px;overflow:hidden;position:relative;box-shadow:0 30px 80px rgba(232,137,154,.3),0 2px 12px rgba(255,192,203,.25);display:flex;flex-direction:column;}
+#petal-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;border-radius:44px;}
+
+/* LOCK */
+#lock{position:absolute;inset:0;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;border-radius:44px;overflow:hidden;transition:opacity .8s ease,transform .8s ease;}
+#lock.out{opacity:0;transform:scale(1.04);pointer-events:none;}
+#lock-bg{position:absolute;inset:0;background:linear-gradient(185deg,#ffe2ea 0%,#fff4f7 50%,#ffedf2 100%);}
+#lock-scene{position:absolute;inset:0;width:100%;height:100%;}
+.lock-panel{position:relative;z-index:5;width:100%;background:rgba(255,255,255,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top-left-radius:32px;border-top-right-radius:32px;padding:26px 36px 48px;display:flex;flex-direction:column;align-items:center;box-shadow:0 -10px 48px rgba(255,192,203,.22);}
+.lock-kanji{font-family:'Noto Serif JP',serif;font-size:11px;letter-spacing:.26em;color:var(--pink-deep);margin-bottom:8px;opacity:.65;}
+.lock-h{font-family:'Playfair Display',serif;font-size:24px;color:var(--text);margin-bottom:4px;text-align:center;}
+.lock-p{font-size:12px;color:var(--text-soft);margin-bottom:22px;letter-spacing:.04em;}
+.lock-field{width:100%;padding:14px 22px;border:2px solid var(--pink-light);border-radius:50px;background:white;font-family:'DM Sans',sans-serif;font-size:15px;text-align:center;letter-spacing:.1em;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;margin-bottom:12px;}
+.lock-field:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(255,192,203,.22);}
+.lock-field.err{border-color:#f4a0a0;animation:sh .35s ease;}
+@keyframes sh{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.lock-btn{width:100%;padding:15px;background:var(--pink);color:var(--text-mid);border:none;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:background .2s,transform .15s;box-shadow:0 4px 18px rgba(255,192,203,.5);}
+.lock-btn:hover{background:var(--pink-deep);color:white;transform:translateY(-1px);}
+.lock-err{font-size:12px;color:#e07070;margin-top:10px;min-height:18px;text-align:center;}
+
+/* LOADING */
+#loading{position:absolute;inset:0;z-index:300;background:rgba(255,248,249,.94);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;border-radius:44px;}
+#loading.show{display:flex;}
+.spinner{width:36px;height:36px;border:3px solid var(--pink-light);border-top-color:var(--pink-deep);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--text-soft);font-family:'Playfair Display',serif;font-style:italic;}
+
+/* TOAST */
+#toast{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);z-index:600;background:#2e1218;color:white;padding:10px 20px;border-radius:50px;font-size:12px;white-space:nowrap;opacity:0;transition:opacity .3s;pointer-events:none;}
+#toast.show{opacity:1;}
+
+/* MAIN */
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative;z-index:3;}
+.screen::-webkit-scrollbar{display:none;}
+.screen.hidden{display:none;}
+.page{display:none;}.page.active{display:block;}
+.spacer{height:32px;}.sec-pad{padding:20px;}
+
+/* HERO */
+.hero-header{position:relative;background:var(--pink);padding:52px 24px 70px;overflow:hidden;min-height:200px;}
+.blob{position:absolute;border-radius:50%;background:rgba(255,255,255,.18);}
+.blob-1{width:180px;height:180px;top:-60px;right:-50px;}
+.blob-2{width:120px;height:120px;bottom:-40px;left:20px;background:rgba(255,255,255,.12);}
+.blob-3{width:80px;height:80px;top:30px;right:90px;background:rgba(255,255,255,.09);}
+.hero-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;position:relative;z-index:1;}
+.brand{display:flex;align-items:center;gap:9px;}
+.brand-icon{width:30px;height:30px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.brand-name{font-family:'Playfair Display',serif;font-size:17px;color:white;font-style:italic;}
+.hero-icons{display:flex;gap:10px;}
+.hero-icon-btn{width:34px;height:34px;background:rgba(255,255,255,.22);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;border:none;position:relative;transition:background .2s;}
+.hero-icon-btn:hover{background:rgba(255,255,255,.38);}
+.badge{position:absolute;top:-3px;right:-3px;width:14px;height:14px;background:white;border-radius:50%;border:2px solid var(--pink);font-size:7px;color:var(--pink-deep);display:flex;align-items:center;justify-content:center;font-weight:700;}
+.hero-greeting{color:rgba(255,255,255,.85);font-size:13px;margin-bottom:4px;position:relative;z-index:1;}
+.hero-title{font-family:'Playfair Display',serif;font-size:26px;color:white;font-style:italic;position:relative;z-index:1;line-height:1.25;}
+.quote-banner{margin-top:14px;background:rgba(255,255,255,.2);padding:10px 14px;border-radius:12px;font-style:italic;font-size:12px;color:white;position:relative;z-index:1;line-height:1.4;text-align:center;}
+
+/* DAY CARD */
+.day-card{position:relative;z-index:5;margin:-38px 20px 0;background:white;border-radius:22px;padding:18px 22px;display:flex;align-items:center;gap:18px;box-shadow:0 8px 32px rgba(232,137,154,.13);}
+.day-left{flex:1;}
+.day-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-soft);margin-bottom:2px;}
+.day-num{font-family:'Playfair Display',serif;font-size:36px;color:var(--pink-deep);line-height:1;}
+.day-sub{font-size:11px;color:var(--text-soft);margin-top:2px;}
+.day-ring{width:60px;height:60px;flex-shrink:0;border-radius:50%;background:var(--pink-pale);border:3px solid var(--pink-light);display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.day-ring span:first-child{font-size:22px;}
+.day-ring span:last-child{font-size:9px;color:var(--text-soft);letter-spacing:.05em;}
+
+/* SECTIONS */
+.section{padding:24px 20px 0;}
+.section-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.section-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--text);}
+.section-more{font-size:12px;color:var(--pink-deep);cursor:pointer;border:none;background:none;font-family:'DM Sans',sans-serif;}
+.cats{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;}
+.cats::-webkit-scrollbar{display:none;}
+.cat{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;border:none;background:none;}
+.cat-icon{width:58px;height:58px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:24px;transition:transform .2s;box-shadow:0 2px 10px rgba(255,192,203,.2);}
+.cat:hover .cat-icon{transform:scale(1.07);}
+.cat-label{font-size:10px;color:var(--text-soft);letter-spacing:.06em;text-transform:uppercase;}
+.cat-a{background:#ffeef2;}.cat-b{background:#fff0f3;}.cat-c{background:#fff4ee;}.cat-d{background:#f2eeff;}
+
+/* MEMORY SCROLL */
+.hscroll{display:flex;gap:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.hscroll::-webkit-scrollbar{display:none;}
+.mem-card{flex-shrink:0;width:190px;background:white;border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(232,137,154,.1);cursor:pointer;transition:transform .2s;}
+.mem-card:hover{transform:translateY(-3px);}
+.mem-ph{height:120px;width:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;overflow:hidden;}
+.mem-ph img{width:100%;height:100%;object-fit:cover;display:block;}
+.mem-body{padding:11px 13px;}
+.mem-who{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.mem-av{width:22px;height:22px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+.mem-name{font-size:12px;font-weight:500;color:var(--text);}
+.mem-date{font-size:10px;color:var(--text-soft);}
+.mem-cap{font-size:12px;color:var(--text-mid);line-height:1.45;}
+
+/* NOTE CARDS */
+.note-card{background:white;border-radius:20px;padding:16px;margin-bottom:10px;display:flex;gap:13px;box-shadow:0 3px 16px rgba(255,192,203,.13);transition:transform .2s;}
+.note-card:hover{transform:translateX(3px);}
+.note-av{width:40px;height:40px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.note-meta{flex:1;min-width:0;}
+.note-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.note-name{font-size:13px;font-weight:500;color:var(--text);}
+.note-time{font-size:10px;color:var(--text-soft);flex-shrink:0;margin-left:6px;}
+.note-text{font-size:12px;color:var(--text-mid);line-height:1.55;font-style:italic;}
+.note-del{border:none;background:none;color:var(--pink-light);font-size:16px;cursor:pointer;padding:0 0 0 8px;flex-shrink:0;transition:color .2s;line-height:1;}
+.note-del:hover{color:var(--pink-deep);}
+.note-locked{display:flex;align-items:center;gap:6px;color:var(--text-soft);font-style:italic;font-size:12px;}
+
+/* BUCKET LIST */
+.bucket-item{display:flex;gap:12px;align-items:center;background:white;padding:16px;border-radius:18px;margin-bottom:10px;box-shadow:0 3px 14px rgba(255,192,203,.15);cursor:pointer;transition:transform .2s,opacity .3s;}
+.bucket-item:hover{transform:translateY(-2px);}
+.bucket-item.done{opacity:.55;}
+.bucket-item.done .bucket-text{text-decoration:line-through;color:var(--text-soft);}
+.bucket-check{width:24px;height:24px;border-radius:50%;border:2px solid var(--pink-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s,border-color .2s;}
+.bucket-item.done .bucket-check{background:var(--pink);border-color:var(--pink);color:white;font-size:12px;}
+.bucket-text{flex:1;font-size:14px;color:var(--text);font-weight:500;}
+
+/* PHOTO STORAGE */
+.folder-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;padding:14px 20px 20px;}
+.folder-card{background:white;border-radius:20px;padding:18px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;box-shadow:0 4px 18px rgba(255,192,203,.13);cursor:pointer;transition:transform .2s,box-shadow .2s;border:2px solid transparent;position:relative;}
+.folder-card:hover{transform:translateY(-3px);border-color:var(--pink-light);}
+.folder-icon-big{font-size:36px;}
+.folder-name-label{font-family:'Playfair Display',serif;font-size:13px;color:var(--text);text-align:center;}
+.folder-count-label{font-size:11px;color:var(--text-soft);}
+.folder-del-btn{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:var(--pink-pale);border:none;cursor:pointer;font-size:11px;color:var(--text-soft);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;}
+.folder-card:hover .folder-del-btn{opacity:1;}
+.folder-del-btn:hover{background:var(--pink-light);}
+.add-folder-card{border:2px dashed var(--pink-light);border-radius:20px;padding:18px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:border-color .2s,background .2s;background:white;}
+.add-folder-card:hover{border-color:var(--pink);background:var(--pink-pale);}
+.add-folder-icon{font-size:28px;color:var(--pink-light);}
+.add-folder-label{font-size:12px;color:var(--text-soft);}
+.folder-header{display:flex;align-items:center;gap:12px;padding:18px 20px 0;}
+.back-btn{width:36px;height:36px;background:white;border-radius:50%;border:2px solid var(--pink-pale);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;flex-shrink:0;transition:background .2s;}
+.back-btn:hover{background:var(--pink-pale);}
+.folder-view-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--text);}
+.folder-view-sub{font-size:11px;color:var(--text-soft);}
+.photo-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:14px 20px;}
+.photo-thumb{aspect-ratio:1;border-radius:12px;overflow:hidden;cursor:pointer;background:var(--pink-pale);position:relative;transition:transform .2s;}
+.photo-thumb:hover{transform:scale(1.03);}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo-thumb .del-x{position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(255,255,255,.92);border-radius:50%;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;color:var(--pink-deep);font-weight:700;}
+.photo-thumb:hover .del-x{opacity:1;}
+.upload-tile{aspect-ratio:1;border-radius:12px;background:white;border:2px dashed var(--pink-light);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;cursor:pointer;transition:border-color .2s,background .2s;position:relative;}
+.upload-tile:hover{border-color:var(--pink);background:var(--pink-pale);}
+.upload-tile input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-tile-icon{font-size:20px;color:var(--pink-light);}
+.upload-tile-label{font-size:10px;color:var(--text-soft);}
+
+/* TIMELINE */
+.timeline-item{display:flex;gap:13px;margin-bottom:18px;align-items:flex-start;}
+.tl-dot-wrap{display:flex;flex-direction:column;align-items:center;}
+.tl-dot{width:42px;height:42px;border-radius:50%;background:#fff0f3;border:2px solid #ffc0cb;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+.tl-line{width:2px;flex:1;background:#ffeef2;margin:5px 0;min-height:24px;}
+.tl-card{background:white;border-radius:15px;padding:13px 15px;flex:1;box-shadow:0 3px 14px rgba(255,192,203,.14);position:relative;}
+.tl-date{font-size:10px;color:#c0909a;margin-bottom:2px;letter-spacing:.06em;}
+.tl-title{font-family:'Playfair Display',serif;font-size:15px;color:#2e1218;margin-bottom:2px;}
+.tl-desc{font-size:12px;color:#7a3f4f;line-height:1.5;}
+.tl-del{position:absolute;top:10px;right:10px;border:none;background:none;color:var(--pink-light);font-size:15px;cursor:pointer;opacity:0;transition:color .2s;}
+.tl-card:hover .tl-del{opacity:1;}
+.tl-del:hover{color:var(--pink-deep);}
+
+/* MODALS */
+.modal-overlay{display:none;position:absolute;inset:0;z-index:400;background:rgba(46,18,24,.55);align-items:flex-end;justify-content:center;border-radius:44px;}
+.modal-overlay.open{display:flex;}
+.modal-sheet{width:100%;background:white;border-top-left-radius:28px;border-top-right-radius:28px;padding:24px 24px 44px;animation:slideUp .3s ease;max-height:90%;overflow-y:auto;}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:38px;height:4px;background:var(--pink-light);border-radius:2px;margin:0 auto 20px;}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--text);margin-bottom:18px;text-align:center;}
+.modal-field{width:100%;padding:12px 16px;border:2px solid var(--pink-light);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .2s;margin-bottom:12px;background:white;}
+.modal-field:focus{border-color:var(--pink);}
+textarea.modal-field{height:90px;resize:none;line-height:1.5;}
+.modal-label{font-size:11px;color:var(--text-soft);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;display:block;}
+.modal-emoji-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.emoji-btn{width:38px;height:38px;border-radius:10px;background:var(--pink-pale);border:2px solid transparent;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .2s,background .2s;}
+.emoji-btn.selected{border-color:var(--pink-deep);background:var(--pink-light);}
+.modal-row{display:flex;gap:10px;margin-top:4px;}
+.modal-cancel{flex:1;padding:13px;background:var(--pink-pale);color:var(--text-mid);border:none;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;}
+.modal-save{flex:2;padding:13px;background:var(--pink);color:var(--text-mid);border:none;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;box-shadow:0 4px 14px rgba(255,192,203,.45);transition:background .2s;}
+.modal-save:hover{background:var(--pink-deep);color:white;}
+.confirm-sheet{width:100%;background:white;border-top-left-radius:28px;border-top-right-radius:28px;padding:28px 24px 44px;animation:slideUp .25s ease;text-align:center;}
+.confirm-icon{font-size:36px;margin-bottom:10px;}
+.confirm-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--text);margin-bottom:6px;}
+.confirm-sub{font-size:13px;color:var(--text-soft);margin-bottom:22px;line-height:1.5;}
+.confirm-row{display:flex;gap:10px;}
+.confirm-cancel{flex:1;padding:13px;background:var(--pink-pale);color:var(--text-mid);border:none;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;}
+.confirm-del{flex:1;padding:13px;background:#f4a0a0;color:white;border:none;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;}
+
+/* LIGHTBOX */
+#lightbox{display:none;position:absolute;inset:0;z-index:450;background:rgba(30,10,14,.93);flex-direction:column;align-items:center;justify-content:center;border-radius:44px;}
+#lightbox.open{display:flex;}
+#lightbox img{max-width:88%;max-height:62%;border-radius:16px;object-fit:contain;}
+#lightbox-close{position:absolute;top:22px;right:22px;font-size:20px;color:white;cursor:pointer;background:rgba(255,255,255,.15);border:none;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+#lightbox-meta{margin-top:12px;text-align:center;padding:0 24px;}
+#lightbox-date{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px;}
+#lightbox-cap{font-family:'Playfair Display',serif;font-style:italic;color:rgba(255,255,255,.8);font-size:14px;}
+#lightbox-del{margin-top:14px;background:rgba(244,160,160,.25);color:rgba(255,255,255,.8);border:1px solid rgba(244,160,160,.4);border-radius:50px;padding:9px 24px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;}
+#lightbox-del:hover{background:rgba(244,160,160,.45);}
+
+/* BOTTOM NAV */
+.bottom-nav{position:relative;z-index:10;background:white;border-top:1px solid var(--pink-pale);display:flex;align-items:center;justify-content:space-around;padding:12px 0 20px;flex-shrink:0;}
+.nav-tab{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;flex:1;border:none;background:none;}
+.nav-tab svg{width:22px;height:22px;stroke:var(--text-soft);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s;}
+.nav-tab .nav-lbl{font-size:9px;color:var(--text-soft);letter-spacing:.06em;transition:color .2s;}
+.nav-tab.active svg{stroke:var(--pink-deep);}
+.nav-tab.active .nav-lbl{color:var(--pink-deep);}
+.fab{width:52px;height:52px;background:var(--pink);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-top:-24px;box-shadow:0 6px 20px rgba(255,192,203,.55);transition:transform .2s,background .2s;position:relative;z-index:1;border:none;}
+.fab:hover{transform:scale(1.08) translateY(-2px);background:var(--pink-deep);}
+.fab svg{width:22px;height:22px;stroke:white;stroke-width:2.2;fill:none;stroke-linecap:round;}
+.add-btn{padding:11px 22px;background:var(--pink);color:var(--text-mid);border:none;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;box-shadow:0 4px 14px rgba(255,192,203,.4);transition:background .2s;}
+.add-btn:hover{background:var(--pink-deep);color:white;}
+.empty-msg{text-align:center;color:var(--text-soft);font-size:13px;padding:24px 0;line-height:2;}
+</style>
+</head>
+<body>
+<div class="phone">
+<canvas id="petal-canvas"></canvas>
+<audio id="bgm" loop><source src="https://gqfwkbwtiastltifajxu.supabase.co/storage/v1/object/public/photos/(Only%20You)%20-%20Lay%20Phyu.mp3" type="audio/mpeg"></audio>
+
+<!-- LOADING -->
+<div id="loading"><div class="spinner"></div><div class="loading-text">Loading our world... 🌸</div></div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ════ LOCK SCREEN ════ -->
+<div id="lock">
+  <div id="lock-bg"></div>
+  <svg id="lock-scene" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffe2ea"/><stop offset="60%" stop-color="#fff4f7"/><stop offset="100%" stop-color="#ffeef4"/></linearGradient>
+      <linearGradient id="pathG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f9ccd8"/><stop offset="100%" stop-color="#e8aab8"/></linearGradient>
+      <linearGradient id="groundG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fde6ef"/><stop offset="100%" stop-color="#fcd4e2"/></linearGradient>
+      <radialGradient id="glowG" cx="50%" cy="30%" r="45%"><stop offset="0%" stop-color="#fff5f8" stop-opacity=".95"/><stop offset="100%" stop-color="#ffc0cb" stop-opacity="0"/></radialGradient>
+      <filter id="b2"><feGaussianBlur stdDeviation="2"/></filter>
+      <filter id="b5"><feGaussianBlur stdDeviation="5"/></filter>
+      <filter id="b10"><feGaussianBlur stdDeviation="10"/></filter>
+    </defs>
+    <rect width="390" height="844" fill="url(#skyG)"/>
+    <ellipse cx="195" cy="240" rx="160" ry="130" fill="url(#glowG)"/>
+    <ellipse cx="60" cy="500" rx="140" ry="85" fill="#f9d0dc" opacity=".3" filter="url(#b10)"/>
+    <ellipse cx="330" cy="510" rx="120" ry="80" fill="#f9d0dc" opacity=".28" filter="url(#b10)"/>
+    <ellipse cx="195" cy="520" rx="210" ry="95" fill="#fce4ea" opacity=".35" filter="url(#b5)"/>
+    <path d="M0 618 Q195 580 390 618 L390 844 L0 844 Z" fill="url(#groundG)"/>
+    <ellipse cx="195" cy="638" rx="185" ry="16" fill="#ffc0cb" opacity=".2" filter="url(#b5)"/>
+    <path d="M128 844 L163 682 L195 645 L227 682 L262 844 Z" fill="url(#pathG)" opacity=".55"/>
+    <path d="M178 844 L190 700 L195 685 L200 700 L212 844 Z" fill="white" opacity=".15"/>
+    <path d="M62 622 Q57 562 67 502 Q72 462 62 418" stroke="#c888a0" stroke-width="7.5" fill="none" stroke-linecap="round"/>
+    <path d="M65 530 Q32 504 8 482" stroke="#c888a0" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M64 508 Q38 478 16 456" stroke="#c888a0" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M64 550 Q34 536 12 525" stroke="#c888a0" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M65 512 Q94 494 116 480" stroke="#c888a0" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+    <g opacity=".93">
+      <ellipse cx="16" cy="468" rx="30" ry="22" fill="#ffc0cb" filter="url(#b2)"/>
+      <ellipse cx="44" cy="452" rx="34" ry="24" fill="#ffd6de" filter="url(#b2)"/>
+      <ellipse cx="20" cy="436" rx="26" ry="19" fill="#ffe0e8" filter="url(#b2)"/>
+      <ellipse cx="58" cy="432" rx="30" ry="21" fill="#ffc0cb" filter="url(#b2)"/>
+      <ellipse cx="32" cy="416" rx="28" ry="18" fill="#ffd6de" filter="url(#b2)"/>
+      <ellipse cx="84" cy="442" rx="23" ry="17" fill="#ffc0cb" filter="url(#b2)"/>
+      <ellipse cx="104" cy="458" rx="19" ry="14" fill="#ffe0e8" filter="url(#b2)"/>
+      <ellipse cx="48" cy="406" rx="23" ry="14" fill="#ffccd6" filter="url(#b2)"/>
+    </g>
+    <path d="M328 622 Q333 562 323 502 Q318 462 328 418" stroke="#c888a0" stroke-width="7.5" fill="none" stroke-linecap="round"/>
+    <path d="M325 530 Q358 504 382 482" stroke="#c888a0" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M326 508 Q352 478 374 456" stroke="#c888a0" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M326 550 Q356 536 378 525" stroke="#c888a0" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M325 512 Q296 494 274 480" stroke="#c888a0" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+    <g opacity=".93">
+      <ellipse cx="374" cy="468" rx="30" ry="22" fill="#ffc0cb" filter="url(#b2)"/>
+      <ellipse cx="346" cy="452" rx="34" ry="24" fill="#ffd6de" filter="url(#b2)"/>
+      <ellipse cx="370" cy="436" rx="26" ry="19" fill="#ffe0e8" filter="url(#b2)"/>
+      <ellipse cx="332" cy="432" rx="30" ry="21" fill="#ffc0cb" filter="url(#b2)"/>
+      <ellipse cx="358" cy="416" rx="28" ry="18" fill="#ffd6de" filter="url(#b2)"/>
+      <ellipse cx="306" cy="442" rx="23" ry="17" fill="#ffc0cb" filter="url(#b2)"/>
+      <ellipse cx="286" cy="458" rx="19" ry="14" fill="#ffe0e8" filter="url(#b2)"/>
+      <ellipse cx="342" cy="406" rx="23" ry="14" fill="#ffccd6" filter="url(#b2)"/>
+    </g>
+    <path d="M138 622 Q136 594 140 568" stroke="#d4a0b0" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <ellipse cx="140" cy="554" rx="24" ry="17" fill="#ffc0cb" opacity=".78" filter="url(#b2)"/>
+    <ellipse cx="122" cy="558" rx="17" ry="13" fill="#ffd6de" opacity=".72" filter="url(#b2)"/>
+    <ellipse cx="160" cy="556" rx="17" ry="12" fill="#ffb8c8" opacity=".72" filter="url(#b2)"/>
+    <path d="M252 622 Q254 594 250 568" stroke="#d4a0b0" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <ellipse cx="250" cy="554" rx="24" ry="17" fill="#ffc0cb" opacity=".78" filter="url(#b2)"/>
+    <ellipse cx="268" cy="558" rx="17" ry="13" fill="#ffd6de" opacity=".72" filter="url(#b2)"/>
+    <ellipse cx="230" cy="556" rx="17" ry="12" fill="#ffb8c8" opacity=".72" filter="url(#b2)"/>
+    <g opacity=".14"><rect x="170" y="492" width="5.5" height="66" fill="#e88899" rx="2.5"/><rect x="214" y="492" width="5.5" height="66" fill="#e88899" rx="2.5"/><rect x="162" y="488" width="66" height="8" fill="#e88899" rx="4"/><rect x="165" y="500" width="60" height="5" fill="#e88899" rx="2.5"/></g>
+    <rect x="56" y="592" width="4" height="30" fill="#c888a0" rx="2" opacity=".8"/><rect x="48" y="588" width="20" height="13" fill="#ffe4ec" stroke="#e8a0b4" stroke-width="1" rx="3"/><rect x="50" y="584" width="16" height="5" fill="#e8a0b4" rx="2"/>
+    <rect x="330" y="592" width="4" height="30" fill="#c888a0" rx="2" opacity=".8"/><rect x="322" y="588" width="20" height="13" fill="#ffe4ec" stroke="#e8a0b4" stroke-width="1" rx="3"/><rect x="324" y="584" width="16" height="5" fill="#e8a0b4" rx="2"/>
+    <g fill="#ffc0cb" opacity=".5">
+      <ellipse cx="152" cy="632" rx="5" ry="2.2" transform="rotate(-18 152 632)"/>
+      <ellipse cx="238" cy="626" rx="4.5" ry="2" transform="rotate(22 238 626)"/>
+      <ellipse cx="100" cy="640" rx="4" ry="1.8" transform="rotate(-6 100 640)"/>
+      <ellipse cx="292" cy="636" rx="5" ry="2" transform="rotate(12 292 636)"/>
+      <ellipse cx="172" cy="648" rx="3.5" ry="1.6" transform="rotate(-22 172 648)"/>
+      <ellipse cx="218" cy="646" rx="4" ry="1.8" transform="rotate(16 218 646)"/>
+      <ellipse cx="195" cy="660" rx="4.5" ry="2" transform="rotate(-4 195 660)"/>
+    </g>
+  </svg>
+  <div class="lock-panel">
+    <div class="lock-kanji">さくら · 私たちの小さな世界</div>
+    <h2 class="lock-h">Our Little World</h2>
+    <p class="lock-p">just for the two of us 🌸</p>
+    <input class="lock-field" id="pw" type="password" placeholder="our secret word" maxlength="40" autocomplete="off"/>
+    <button class="lock-btn" onclick="unlock()">Enter 🌸</button>
+    <div class="lock-err" id="lock-err"></div>
+  </div>
+</div>
+
+<!-- ════ MAIN APP ════ -->
+<div class="screen hidden" id="app">
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="hero-header">
+      <div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div>
+      <div class="hero-top">
+        <div class="brand"><div class="brand-icon">🌸</div><span class="brand-name">Our Little World</span></div>
+        <div class="hero-icons">
+          <button class="hero-icon-btn" onclick="toggleMusic()" id="music-btn" title="Toggle Music">🎵</button>
+          <button class="hero-icon-btn" onclick="goTab('notes')">💌<div class="badge" id="notes-badge">0</div></button>
+        </div>
+      </div>
+      <div class="hero-greeting">Welcome back, my love</div>
+      <div class="hero-title">Our little world<br>is blooming 🌸</div>
+      <div class="quote-banner" id="daily-quote">"..."</div>
+    </div>
+    <div class="day-card">
+      <div class="day-left">
+        <div class="day-label">Days Together</div>
+        <div class="day-num" id="day-num">0</div>
+        <div class="day-sub">beautiful days & counting 🌸</div>
+      </div>
+      <div class="day-ring"><span>💕</span><span>US</span></div>
+    </div>
+    <div class="section">
+      <div class="section-row"><div class="section-title">Explore</div></div>
+      <div class="cats">
+        <button class="cat" onclick="goTab('photos')"><div class="cat-icon cat-a">📷</div><div class="cat-label">Photos</div></button>
+        <button class="cat" onclick="goTab('timeline')"><div class="cat-icon cat-b">🗓</div><div class="cat-label">Timeline</div></button>
+        <button class="cat" onclick="goTab('notes')"><div class="cat-icon cat-c">💌</div><div class="cat-label">Notes</div></button>
+        <button class="cat" onclick="goTab('bucket')"><div class="cat-icon cat-d">✨</div><div class="cat-label">Plans</div></button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-row"><div class="section-title">Recent Photos</div><button class="section-more" onclick="goTab('photos')">See all →</button></div>
+      <div class="hscroll" id="recent-scroll"></div>
+    </div>
+    <div class="section">
+      <div class="section-row"><div class="section-title">Love Notes</div><button class="section-more" onclick="goTab('notes')">See all →</button></div>
+      <div id="home-notes-list"></div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- PHOTOS -->
+  <div class="page" id="page-photos">
+    <div class="hero-header" style="padding-bottom:28px">
+      <div class="blob blob-1"></div>
+      <div class="hero-top">
+        <div class="brand"><div class="brand-icon">📷</div><span class="brand-name">Photo Storage</span></div>
+        <button class="hero-icon-btn" onclick="openNewFolderModal()" style="font-size:18px">＋</button>
+      </div>
+      <div class="hero-greeting">Our memory folders</div>
+      <div class="hero-title">Every moment<br>saved forever 🌸</div>
+    </div>
+    <div id="view-folders"><div class="folder-grid" id="folder-grid"></div></div>
+    <div id="view-folder-detail" style="display:none">
+      <div class="folder-header">
+        <button class="back-btn" onclick="closeFolder()">←</button>
+        <div><div class="folder-view-title" id="folder-detail-name"></div><div class="folder-view-sub" id="folder-detail-sub"></div></div>
+      </div>
+      <div class="photo-grid-3" id="photo-grid-inner"></div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="page" id="page-timeline">
+    <div class="hero-header" style="padding-bottom:28px">
+      <div class="blob blob-1"></div>
+      <div class="hero-top"><div class="brand"><div class="brand-icon">🗓</div><span class="brand-name">Our Timeline</span></div></div>
+      <div class="hero-greeting">How it all began</div>
+      <div class="hero-title">Our story,<br>written together 🌸</div>
+    </div>
+    <div class="sec-pad">
+      <div id="timeline-list"></div>
+      <div style="text-align:center;margin-top:4px"><button class="add-btn" onclick="openMilestoneModal()">＋ Add Milestone</button></div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- BUCKET LIST -->
+  <div class="page" id="page-bucket">
+    <div class="hero-header" style="padding-bottom:28px">
+      <div class="blob blob-1"></div>
+      <div class="hero-top"><div class="brand"><div class="brand-icon">✨</div><span class="brand-name">Bucket List</span></div></div>
+      <div class="hero-greeting">Future plans</div>
+      <div class="hero-title">Things we want<br>to do together 🌸</div>
+    </div>
+    <div class="sec-pad">
+      <div id="bucket-list"></div>
+      <div style="text-align:center;margin-top:14px"><button class="add-btn" onclick="openBucketModal()">＋ Add to our list</button></div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="page" id="page-notes">
+    <div class="hero-header" style="padding-bottom:28px">
+      <div class="blob blob-1"></div>
+      <div class="hero-top"><div class="brand"><div class="brand-icon">💌</div><span class="brand-name">Love Notes</span></div></div>
+      <div class="hero-greeting">Little letters</div>
+      <div class="hero-title">Written with<br>all my heart 🌸</div>
+    </div>
+    <div class="sec-pad">
+      <div id="notes-list"></div>
+      <div style="text-align:center;margin-top:4px"><button class="add-btn" onclick="openNoteModal()">＋ Write a Note</button></div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt=""/>
+  <div id="lightbox-meta"><div id="lightbox-date"></div><div id="lightbox-cap"></div></div>
+  <button id="lightbox-del" onclick="deleteLightboxPhoto()">🗑 Remove this photo</button>
+</div>
+
+<!-- MILESTONE MODAL -->
+<div class="modal-overlay" id="milestone-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add a Milestone 🌸</div>
+    <div class="modal-emoji-row" id="ms-emoji-row"></div>
+    <input class="modal-field" id="ms-title" placeholder="What happened? (e.g. First date 💕)" maxlength="60"/>
+    <label class="modal-label">Date</label>
+    <input class="modal-field" id="ms-date" type="date"/>
+    <textarea class="modal-field" id="ms-desc" placeholder="Tell us more... (optional)"></textarea>
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeModal('milestone-modal')">Cancel</button>
+      <button class="modal-save" onclick="saveMilestone()">Save 🌸</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTE MODAL -->
+<div class="modal-overlay" id="note-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Write a Love Note 💌</div>
+    <div class="modal-emoji-row" id="note-emoji-row"></div>
+    <input class="modal-field" id="note-from" placeholder="From: (your name)" maxlength="30"/>
+    <textarea class="modal-field" id="note-text" placeholder="Write your note here... 💕" style="height:110px"></textarea>
+    <label class="modal-label">🔒 Time Capsule — unlock on this date (optional)</label>
+    <input class="modal-field" id="note-unlock" type="date"/>
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeModal('note-modal')">Cancel</button>
+      <button class="modal-save" onclick="saveNote()">Send 💌</button>
+    </div>
+  </div>
+</div>
+
+<!-- BUCKET MODAL -->
+<div class="modal-overlay" id="bucket-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add a Plan ✨</div>
+    <input class="modal-field" id="bucket-text-input" placeholder="e.g. Travel to Japan 🇯🇵" maxlength="80"/>
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeModal('bucket-modal')">Cancel</button>
+      <button class="modal-save" onclick="saveBucketItem()">Add ✨</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOLDER MODAL -->
+<div class="modal-overlay" id="folder-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">New Folder 📁</div>
+    <div class="modal-emoji-row" id="folder-emoji-row"></div>
+    <input class="modal-field" id="folder-name-input" placeholder="Folder name (e.g. Our Selfies)" maxlength="30"/>
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeModal('folder-modal')">Cancel</button>
+      <button class="modal-save" onclick="saveNewFolder()">Create 🌸</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="confirm-sheet">
+    <div class="confirm-icon" id="confirm-icon">🗑</div>
+    <div class="confirm-title" id="confirm-title">Remove this?</div>
+    <div class="confirm-sub" id="confirm-sub">This cannot be undone.</div>
+    <div class="confirm-row">
+      <button class="confirm-cancel" onclick="closeModal('confirm-modal')">Keep it</button>
+      <button class="confirm-del" id="confirm-yes-btn">Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav" id="bottom-nav" style="display:none">
+  <button class="nav-tab active" id="tab-home" onclick="goTab('home')">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span class="nav-lbl">Home</span>
+  </button>
+  <button class="nav-tab" id="tab-timeline" onclick="goTab('timeline')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span class="nav-lbl">Timeline</span>
+  </button>
+  <button class="fab" onclick="fabAction()">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <button class="nav-tab" id="tab-bucket" onclick="goTab('bucket')">
+    <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    <span class="nav-lbl">Plans</span>
+  </button>
+  <button class="nav-tab" id="tab-notes" onclick="goTab('notes')">
+    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    <span class="nav-lbl">Notes</span>
+  </button>
+</div>
+
+</div><!-- /phone -->
+
+<!-- ═══ Supabase SDK ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+/* ════════════════════════════════════════════
+   🌸 STEP 1 — PASTE YOUR SUPABASE KEYS HERE
+   supabase.com → your project
+   → Project Settings → API
+════════════════════════════════════════════ */
+const SUPABASE_URL      = 'https://gqfwkbwtiastltifajxu.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_iEPyr617Hob6YByF5oYUdw_mf3DYIeN';
+
+/* ════ APP CONFIG ════ */
+const PASSWORD   = 'forever';
+const START_DATE = new Date('2024-06-02');
+
+const QUOTES = [
+  'You are my today and all of my tomorrows. 💕',
+  'Every love story is beautiful, but ours is my favorite. 🌸',
+  'I love you more than coffee, but please don\'t make me prove it. ☕',
+  'You are the best thing I never planned. ✨',
+  'My favorite place in all the world is next to you. 🌎',
+  'I still fall for you every single day. 🍂',
+  'You\'re my favorite notification. 📱',
+  'Together is a wonderful place to be. 🏡',
+  'I look at you and see the rest of my life in front of my eyes. 👀',
+  'Loving you is the easiest thing I\'ve ever done. 💝',
+];
+
+/* ════ SUPABASE CLIENT ════ */
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ════ HELPERS ════ */
+function showLoading(msg){
+  const l = document.getElementById('loading');
+  l.querySelector('.loading-text').textContent = msg || 'Loading...';
+  l.classList.add('show');
+}
+function hideLoading(){ document.getElementById('loading').classList.remove('show'); }
+
+let toastTimer;
+function toast(msg, ms=2600){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+}
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function fmtDate(iso){
+  return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+/* ════ MUSIC ════ */
+let musicPlaying = false;
+function playMusic(){
+  document.getElementById('bgm').play()
+    .then(() => { musicPlaying=true; document.getElementById('music-btn').textContent='🎵'; })
+    .catch(() => { musicPlaying=false; document.getElementById('music-btn').textContent='🔇'; });
+}
+function toggleMusic(){
+  const audio = document.getElementById('bgm');
+  const btn   = document.getElementById('music-btn');
+  if(musicPlaying){ audio.pause(); musicPlaying=false; btn.textContent='🔇'; }
+  else { audio.play(); musicPlaying=true; btn.textContent='🎵'; }
+}
+
+/* ════ UNLOCK ════ */
+function unlock(){
+  const val = document.getElementById('pw').value.trim().toLowerCase();
+  if(val === PASSWORD.toLowerCase()){
+    document.getElementById('lock-err').textContent = '';
+    document.getElementById('lock').classList.add('out');
+    playMusic();
+    setTimeout(async () => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').classList.remove('hidden');
+      document.getElementById('bottom-nav').style.display = 'flex';
+      countDays();
+      await loadAll();
+    }, 800);
+  } else {
+    const f = document.getElementById('pw');
+    f.classList.add('err');
+    document.getElementById('lock-err').textContent = 'Hmm, try again 💕';
+    setTimeout(() => f.classList.remove('err'), 400);
+  }
+}
+document.getElementById('pw').addEventListener('keydown', e => { if(e.key==='Enter') unlock(); });
+
+/* ════ LOAD ALL ════ */
+async function loadAll(){
+  showLoading('Loading our world... 🌸');
+  try {
+    await Promise.all([loadFolders(), loadMilestones(), loadNotes(), loadBucketList()]);
+    await updateRecentScroll();
+  } catch(err){
+    console.error('Supabase error:', err);
+    toast('⚠️ Could not connect — check your Supabase keys!', 5000);
+  }
+  hideLoading();
+  updateNotesBadge();
+}
+
+/* ════ DAY COUNTER ════ */
+function countDays(){
+  const days = Math.floor((new Date() - START_DATE) / 86400000);
+  const el = document.getElementById('day-num');
+  let i = 0; const step = Math.max(1, Math.ceil(days/60));
+  const t = setInterval(() => { i=Math.min(i+step,days); el.textContent=i.toLocaleString(); if(i>=days)clearInterval(t); }, 20);
+  document.getElementById('daily-quote').textContent = `"${QUOTES[days % QUOTES.length]}"`;
+}
+
+/* ════ NAVIGATION ════ */
+let currentTab = 'home';
+function goTab(tab){
+  currentTab = tab;
+  ['home','photos','timeline','notes','bucket'].forEach(t => {
+    document.getElementById('page-'+t).classList.toggle('active', t===tab);
+    const el = document.getElementById('tab-'+t); if(el) el.classList.toggle('active', t===tab);
+  });
+  document.querySelector('.screen').scrollTop = 0;
+  if(tab !== 'photos') closeFolder();
+}
+function fabAction(){
+  if(currentTab==='timeline') openMilestoneModal();
+  else if(currentTab==='notes') openNoteModal();
+  else if(currentTab==='bucket') openBucketModal();
+  else if(currentTab==='photos' && currentFolderId) document.querySelector('#photo-grid-inner .upload-tile input')?.click();
+  else goTab('photos');
+}
+
+/* ════ EMOJI PICKERS ════ */
+const MS_EMOJIS   = ['🌸','💕','🎉','✈️','🍜','🎄','🌙','🏖','🎵','💍','🥂','🌿','🎁','🐾','🏠'];
+const NOTE_EMOJIS = ['💌','🌸','💕','🥰','😘','✨','🫶','💝','🌹','💗','🫧','🤍','🌷','💞','💐'];
+const FOLD_EMOJIS = ['📸','🤳','🌙','✈️','💕','🌸','🍜','🎉','🏖','🎄','🌿','🎵','🐾','💍','🥂'];
+
+let selectedEmojis = {};
+function buildEmojiPicker(containerId, emojis, key, defaultIdx=0){
+  selectedEmojis[key] = emojis[defaultIdx];
+  document.getElementById(containerId).innerHTML = emojis.map((e,i) =>
+    `<button class="emoji-btn${i===defaultIdx?' selected':''}" data-key="${key}" onclick="pickEmoji(this,'${key}','${e}')">${e}</button>`
+  ).join('');
+}
+function pickEmoji(btn, key, emoji){
+  selectedEmojis[key] = emoji;
+  document.querySelectorAll(`.emoji-btn[data-key="${key}"]`).forEach(b => b.classList.toggle('selected', b===btn));
+}
+
+/* ════ MODALS ════ */
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+});
+function showConfirm(icon, title, sub, onYes){
+  document.getElementById('confirm-icon').textContent = icon;
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-sub').textContent = sub;
+  document.getElementById('confirm-yes-btn').onclick = () => { closeModal('confirm-modal'); onYes(); };
+  openModal('confirm-modal');
+}
+
+/* ════════════════════════
+   FOLDERS & PHOTOS
+════════════════════════ */
+let folders = [];
+let currentFolderId = null;
+let _lbFolderId = null, _lbFilePath = null, _lbPhotoId = null;
+
+async function loadFolders(){
+  const { data, error } = await db.from('folders').select('*').order('created_at', { ascending:true });
+  if(error){ console.error(error); return; }
+  folders = data || [];
+  // seed defaults if empty
+  if(!folders.length){
+    const seeds = [
+      { name:'Our Selfies', emoji:'🤳', color:'#ffeef2' },
+      { name:'Date Nights', emoji:'🌙', color:'#fff0f3' },
+      { name:'Adventures',  emoji:'✈️',  color:'#fff4ee' },
+      { name:'Everyday Us', emoji:'💕', color:'#f2eeff' },
+    ];
+    const { data:inserted } = await db.from('folders').insert(seeds).select();
+    folders = inserted || [];
+  }
+  renderFolders();
+}
+
+function renderFolders(){
+  let html = '';
+  folders.forEach(f => {
+    html += `<div class="folder-card" style="background:${f.color||'#ffeef2'}" onclick="openFolder('${f.id}')">
+      <button class="folder-del-btn" onclick="event.stopPropagation();confirmDeleteFolder('${f.id}','${f.name.replace(/'/g,"\\'")}')">✕</button>
+      <div class="folder-icon-big">${f.emoji}</div>
+      <div class="folder-name-label">${f.name}</div>
+      <div class="folder-count-label" id="fc-${f.id}">...</div>
+    </div>`;
+  });
+  html += `<div class="add-folder-card" onclick="openNewFolderModal()"><div class="add-folder-icon">＋</div><div class="add-folder-label">New Folder</div></div>`;
+  document.getElementById('folder-grid').innerHTML = html;
+  // load counts
+  folders.forEach(async f => {
+    const { count } = await db.from('photos').select('id', { count:'exact', head:true }).eq('folder_id', f.id);
+    const el = document.getElementById('fc-'+f.id);
+    if(el) el.textContent = `${count||0} photo${count!==1?'s':''}`;
+  });
+}
+
+function openNewFolderModal(){
+  buildEmojiPicker('folder-emoji-row', FOLD_EMOJIS, 'folder');
+  document.getElementById('folder-name-input').value = '';
+  openModal('folder-modal');
+}
+async function saveNewFolder(){
+  const name = document.getElementById('folder-name-input').value.trim();
+  if(!name){ document.getElementById('folder-name-input').focus(); return; }
+  const colors = ['#ffeef2','#fff0f3','#fff4ee','#f2eeff','#fef9ee','#eefff4'];
+  showLoading('Creating folder...');
+  const { error } = await db.from('folders').insert({ name, emoji:selectedEmojis['folder']||'📸', color:colors[folders.length%colors.length] });
+  hideLoading();
+  if(error){ toast('Error creating folder 😔'); return; }
+  closeModal('folder-modal'); toast('Folder created! 🌸');
+  await loadFolders();
+}
+
+function confirmDeleteFolder(id, name){
+  showConfirm('🗂', 'Delete this folder?', `"${name}" and all photos inside will be permanently removed.`, () => deleteFolder(id));
+}
+async function deleteFolder(id){
+  showLoading('Deleting folder...');
+  const { data:ph } = await db.from('photos').select('file_path').eq('folder_id', id);
+  if(ph?.length) await db.storage.from('photos').remove(ph.map(p => p.file_path));
+  await db.from('photos').delete().eq('folder_id', id);
+  await db.from('folders').delete().eq('id', id);
+  hideLoading(); toast('Folder deleted');
+  await loadFolders();
+  await updateRecentScroll();
+}
+
+async function openFolder(fid){
+  currentFolderId = fid;
+  const f = folders.find(x => x.id===fid);
+  document.getElementById('folder-detail-name').textContent = f.emoji + ' ' + f.name;
+  document.getElementById('view-folders').style.display = 'none';
+  document.getElementById('view-folder-detail').style.display = 'block';
+  await renderPhotoGrid(fid);
+}
+function closeFolder(){
+  currentFolderId = null;
+  document.getElementById('view-folders').style.display = 'block';
+  document.getElementById('view-folder-detail').style.display = 'none';
+  renderFolders();
+}
+
+async function renderPhotoGrid(fid){
+  showLoading('Loading photos...');
+  const { data:list } = await db.from('photos').select('*').eq('folder_id', fid).order('uploaded_at', { ascending:false });
+  hideLoading();
+  const photos = list || [];
+  document.getElementById('folder-detail-sub').textContent = `${photos.length} photo${photos.length!==1?'s':''}`;
+  let html = photos.map(p => {
+    const url = getPublicUrl(p.file_path);
+    return `<div class="photo-thumb" onclick="openLightbox('${p.id}','${p.file_path}','${fid}','${p.uploaded_at}','${(p.caption||'').replace(/'/g,"\\'")}')">
+      <img src="${url}" loading="lazy"/>
+      <button class="del-x" onclick="event.stopPropagation();confirmDeletePhoto('${p.id}','${p.file_path}','${fid}')">✕</button>
+    </div>`;
+  }).join('');
+  html += `<div class="upload-tile">
+    <span class="upload-tile-icon">＋</span><span class="upload-tile-label">Upload</span>
+    <input type="file" accept="image/*" multiple onchange="handleUpload(event,'${fid}')"/>
+  </div>`;
+  document.getElementById('photo-grid-inner').innerHTML = html;
+}
+
+function getPublicUrl(filePath){
+  const { data } = db.storage.from('photos').getPublicUrl(filePath);
+  return data.publicUrl;
+}
+
+async function handleUpload(e, fid){
+  const files = Array.from(e.target.files);
+  if(!files.length) return;
+  showLoading(`Uploading ${files.length} photo${files.length>1?'s':''}... 🌸`);
+  let ok = 0;
+  for(const file of files){
+    try {
+      const blob = await compressImage(file, 1200, 0.82);
+      const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `${fid}/${uid()}.${ext}`;
+      const { error:upErr } = await db.storage.from('photos').upload(path, blob, { contentType: blob.type||'image/jpeg' });
+      if(upErr){ console.error(upErr); continue; }
+      await db.from('photos').insert({ folder_id:fid, file_path:path, caption:'' });
+      ok++;
+    } catch(err){ console.error(err); }
+  }
+  hideLoading();
+  if(ok) toast(`${ok} photo${ok>1?'s':''} saved! 🌸`);
+  else   toast('Upload failed — check Storage bucket settings');
+  await renderPhotoGrid(fid);
+  renderFolders();
+  await updateRecentScroll();
+}
+
+function compressImage(file, maxPx, quality){
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        let {width:w, height:h} = img;
+        if(w>maxPx || h>maxPx){ const r=Math.min(maxPx/w,maxPx/h); w=Math.round(w*r); h=Math.round(h*r); }
+        const cv = document.createElement('canvas'); cv.width=w; cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        cv.toBlob(blob => resolve(blob), 'image/jpeg', quality);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function confirmDeletePhoto(photoId, filePath, fid){
+  showConfirm('🗑','Remove this photo?','This photo will be permanently deleted.',
+    () => deletePhoto(photoId, filePath, fid));
+}
+async function deletePhoto(photoId, filePath, fid){
+  showLoading('Removing...');
+  await db.storage.from('photos').remove([filePath]);
+  await db.from('photos').delete().eq('id', photoId);
+  hideLoading(); toast('Photo removed');
+  await renderPhotoGrid(fid);
+  renderFolders();
+  await updateRecentScroll();
+}
+
+/* ════ LIGHTBOX ════ */
+function openLightbox(photoId, filePath, fid, uploadedAt, caption){
+  _lbPhotoId=photoId; _lbFilePath=filePath; _lbFolderId=fid;
+  document.getElementById('lightbox-img').src  = getPublicUrl(filePath);
+  document.getElementById('lightbox-date').textContent = fmtDate(uploadedAt);
+  document.getElementById('lightbox-cap').textContent  = caption||'';
+  document.getElementById('lightbox').style.display = 'flex';
+}
+function closeLightbox(){ document.getElementById('lightbox').style.display='none'; }
+function deleteLightboxPhoto(){
+  if(!_lbPhotoId) return;
+  closeLightbox();
+  confirmDeletePhoto(_lbPhotoId, _lbFilePath, _lbFolderId);
+}
+
+/* ════ RECENT SCROLL ════ */
+async function updateRecentScroll(){
+  const { data } = await db.from('photos')
+    .select('*,folders(name,emoji)')
+    .order('uploaded_at',{ascending:false})
+    .limit(8);
+  const scroll = document.getElementById('recent-scroll');
+  if(!data || !data.length){
+    scroll.innerHTML = `<div class="mem-card"><div class="mem-ph" style="background:linear-gradient(135deg,#ffeef2,#ffc0cb)"><span style="font-size:34px">📷</span><span style="font-size:10px;color:var(--text-soft)">No photos yet</span></div><div class="mem-body"><div class="mem-who"><div class="mem-av">🌸</div><div><div class="mem-name">Us</div></div></div><div class="mem-cap">Tap Photos to start 💕</div></div></div>`;
+    return;
+  }
+  scroll.innerHTML = data.map(p => `
+    <div class="mem-card" onclick="goTab('photos');openFolder('${p.folder_id}');setTimeout(()=>openLightbox('${p.id}','${p.file_path}','${p.folder_id}','${p.uploaded_at}','${(p.caption||'').replace(/'/g,"\\'")}'),300)">
+      <div class="mem-ph"><img src="${getPublicUrl(p.file_path)}" loading="lazy"/></div>
+      <div class="mem-body">
+        <div class="mem-who"><div class="mem-av">${p.folders?.emoji||'📷'}</div><div><div class="mem-name">${p.folders?.name||'Photos'}</div><div class="mem-date">${fmtDate(p.uploaded_at)}</div></div></div>
+        <div class="mem-cap">${p.caption||'A beautiful memory 🌸'}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ════════════════════════
+   MILESTONES
+════════════════════════ */
+let milestones = [];
+async function loadMilestones(){
+  const { data } = await db.from('milestones').select('*').order('date',{ascending:true});
+  milestones = data || [];
+  if(!milestones.length){
+    await db.from('milestones').insert([
+      { title:'The beginning', description:'The day our story started 💕', emoji:'🌸', date:'2024-06-02' },
+    ]);
+    const { data:d2 } = await db.from('milestones').select('*').order('date',{ascending:true});
+    milestones = d2 || [];
+  }
+  renderTimeline();
+}
+
+function renderTimeline(){
+  const el = document.getElementById('timeline-list');
+  if(!milestones.length){ el.innerHTML=`<div class="empty-msg">No milestones yet 🌸<br>Tap ＋ to add your first!</div>`; return; }
+  el.innerHTML = milestones.map((m,i) => `
+    <div class="timeline-item">
+      <div class="tl-dot-wrap">
+        <div class="tl-dot">${m.emoji}</div>
+        ${i<milestones.length-1?'<div class="tl-line"></div>':''}
+      </div>
+      <div class="tl-card">
+        <button class="tl-del" onclick="confirmDeleteMilestone('${m.id}','${m.title.replace(/'/g,"\\'")}')">✕</button>
+        <div class="tl-date">${m.date}</div>
+        <div class="tl-title">${m.title}</div>
+        ${m.description?`<div class="tl-desc">${m.description}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function openMilestoneModal(){
+  buildEmojiPicker('ms-emoji-row', MS_EMOJIS, 'ms');
+  document.getElementById('ms-title').value = '';
+  document.getElementById('ms-date').value  = new Date().toISOString().slice(0,10);
+  document.getElementById('ms-desc').value  = '';
+  openModal('milestone-modal');
+}
+async function saveMilestone(){
+  const title = document.getElementById('ms-title').value.trim();
+  if(!title){ document.getElementById('ms-title').focus(); return; }
+  const date  = document.getElementById('ms-date').value || new Date().toISOString().slice(0,10);
+  const description = document.getElementById('ms-desc').value.trim();
+  showLoading('Saving...');
+  const { error } = await db.from('milestones').insert({ title, description, emoji:selectedEmojis['ms']||'🌸', date });
+  hideLoading();
+  if(error){ toast('Error saving 😔'); return; }
+  closeModal('milestone-modal'); toast('Milestone saved! 🌸');
+  await loadMilestones();
+}
+function confirmDeleteMilestone(id, title){
+  showConfirm('🗓','Remove milestone?',`"${title}" will be deleted.`, async () => {
+    showLoading('Removing...'); await db.from('milestones').delete().eq('id',id); hideLoading();
+    toast('Removed'); await loadMilestones();
+  });
+}
+
+/* ════════════════════════
+   NOTES + TIME CAPSULE
+════════════════════════ */
+let notes = [];
+async function loadNotes(){
+  const { data } = await db.from('notes').select('*').order('created_at',{ascending:false});
+  notes = data || [];
+  if(!notes.length){
+    await db.from('notes').insert({ from_name:'A note for you', emoji:'🌸', text:'I built this little world just for us — every petal that falls is a little reminder of how much I love you 💕' });
+    const { data:d2 } = await db.from('notes').select('*').order('created_at',{ascending:false});
+    notes = d2 || [];
+  }
+  renderNotes(); renderHomeNotes(); updateNotesBadge();
+}
+
+function noteCardHTML(n, showDel=true){
+  const today = new Date().toISOString().slice(0,10);
+  const locked = n.unlock_date && today < n.unlock_date;
+  const dateStr = fmtDate(n.created_at);
+  return `<div class="note-card">
+    <div class="note-av">${n.emoji}</div>
+    <div class="note-meta">
+      <div class="note-top"><span class="note-name">${n.from_name}</span><span class="note-time">${dateStr}</span></div>
+      <div class="note-text">${locked
+        ? `<div class="note-locked">🔒 Unlocks on ${n.unlock_date}</div>`
+        : `"${n.text}"`
+      }</div>
+    </div>
+    ${showDel?`<button class="note-del" onclick="confirmDeleteNote('${n.id}')">✕</button>`:''}
+  </div>`;
+}
+function renderNotes(){
+  const el = document.getElementById('notes-list');
+  el.innerHTML = notes.length ? notes.map(n=>noteCardHTML(n,true)).join('') : `<div class="empty-msg">No notes yet 💌<br>Write your first one!</div>`;
+}
+function renderHomeNotes(){
+  const el = document.getElementById('home-notes-list');
+  el.innerHTML = notes.slice(0,2).map(n=>noteCardHTML(n,false)).join('') || `<div style="font-size:12px;color:var(--text-soft);padding:4px 0">Write something sweet 🌸</div>`;
+}
+function updateNotesBadge(){ document.getElementById('notes-badge').textContent = notes.length; }
+
+function openNoteModal(){
+  buildEmojiPicker('note-emoji-row', NOTE_EMOJIS, 'note');
+  document.getElementById('note-from').value   = '';
+  document.getElementById('note-text').value   = '';
+  document.getElementById('note-unlock').value = '';
+  openModal('note-modal');
+}
+async function saveNote(){
+  const text = document.getElementById('note-text').value.trim();
+  if(!text){ document.getElementById('note-text').focus(); return; }
+  const from_name   = document.getElementById('note-from').value.trim() || 'Us';
+  const unlock_date = document.getElementById('note-unlock').value || null;
+  showLoading('Sending...');
+  const { error } = await db.from('notes').insert({ from_name, emoji:selectedEmojis['note']||'💌', text, unlock_date });
+  hideLoading();
+  if(error){ toast('Error sending 😔'); return; }
+  closeModal('note-modal'); toast('Note sent! 💌');
+  await loadNotes();
+}
+function confirmDeleteNote(id){
+  showConfirm('💌','Delete this note?','It will be removed.', async () => {
+    showLoading('Removing...'); await db.from('notes').delete().eq('id',id); hideLoading();
+    toast('Note removed'); await loadNotes();
+  });
+}
+
+/* ════════════════════════
+   BUCKET LIST
+════════════════════════ */
+let bucketlist = [];
+async function loadBucketList(){
+  const { data } = await db.from('bucketlist').select('*').order('created_at',{ascending:true});
+  bucketlist = data || [];
+  if(!bucketlist.length){
+    await db.from('bucketlist').insert({ text:'Have a picnic at the park 🧺', done:false });
+    const { data:d2 } = await db.from('bucketlist').select('*').order('created_at',{ascending:true});
+    bucketlist = d2 || [];
+  }
+  renderBucketList();
+}
+
+function renderBucketList(){
+  const el = document.getElementById('bucket-list');
+  if(!bucketlist.length){ el.innerHTML=`<div class="empty-msg">No plans yet ✨<br>Add something fun!</div>`; return; }
+  const sorted = [...bucketlist].sort((a,b) => a.done===b.done ? 0 : a.done ? 1 : -1);
+  el.innerHTML = sorted.map(b => `
+    <div class="bucket-item ${b.done?'done':''}" onclick="toggleBucketItem('${b.id}',${b.done})">
+      <div class="bucket-check">${b.done?'✓':''}</div>
+      <div class="bucket-text">${b.text}</div>
+      <button class="note-del" onclick="event.stopPropagation();confirmDeleteBucketItem('${b.id}','${b.text.replace(/'/g,"\\'")}')">✕</button>
+    </div>`).join('');
+}
+
+function openBucketModal(){
+  document.getElementById('bucket-text-input').value = '';
+  openModal('bucket-modal');
+}
+async function saveBucketItem(){
+  const text = document.getElementById('bucket-text-input').value.trim();
+  if(!text){ document.getElementById('bucket-text-input').focus(); return; }
+  const { error } = await db.from('bucketlist').insert({ text, done:false });
+  if(error){ toast('Error saving 😔'); return; }
+  closeModal('bucket-modal'); toast('Added to your plans! ✨');
+  await loadBucketList();
+}
+async function toggleBucketItem(id, currentDone){
+  await db.from('bucketlist').update({ done:!currentDone }).eq('id',id);
+  await loadBucketList();
+}
+function confirmDeleteBucketItem(id, text){
+  showConfirm('✨','Remove plan?',`"${text}" will be deleted.`, async () => {
+    await db.from('bucketlist').delete().eq('id',id);
+    toast('Removed'); await loadBucketList();
+  });
+}
+
+/* ════════════════════════
+   FALLING PETALS
+   Original oval/bezier style
+   inner glow + vein line
+════════════════════════ */
+(function(){
+  const canvas = document.getElementById('petal-canvas');
+  const ctx    = canvas.getContext('2d');
+  const phone  = canvas.parentElement;
+  function resize(){ canvas.width=phone.clientWidth; canvas.height=phone.clientHeight; }
+  resize(); window.addEventListener('resize', resize);
+  const W = () => canvas.width, H = () => canvas.height;
+
+  const PALETTES = [
+    {inner:'#fde8ed',outer:'#f4a7b5',vein:'#e8637a'},
+    {inner:'#fff0f3',outer:'#fce8ed',vein:'#f4a7b5'},
+    {inner:'#fce8ed',outer:'#ffc0cb',vein:'#e8899a'},
+    {inner:'#fff8f9',outer:'#fde4ea',vein:'#f4a7b5'},
+    {inner:'#fde4ea',outer:'#f9c8d4',vein:'#e8637a'},
+    {inner:'#ffffff',outer:'#ffd6de',vein:'#ffc0cb'},
+  ];
+
+  function mkp(seedY){
+    const p = PALETTES[Math.floor(Math.random()*PALETTES.length)];
+    return {
+      x:Math.random()*W(), y:seedY?Math.random()*H():-30,
+      r:5+Math.random()*8, rot:Math.random()*Math.PI*2,
+      rotSpeed:(Math.random()-.5)*.025,
+      speed:.4+Math.random()*.9,
+      sway:Math.random()*Math.PI*2,   swaySpeed:.007+Math.random()*.013, swayAmt:.6+Math.random()*1.2,
+      wobble:Math.random()*Math.PI*2, wobbleSpeed:.02+Math.random()*.015,
+      alpha:.45+Math.random()*.45, ci:p.inner, co:p.outer, cv:p.vein,
+    };
+  }
+
+  function drawPetal(p){
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.globalAlpha=p.alpha;
+    const r=p.r;
+    ctx.beginPath();
+    ctx.moveTo(0,-r*1.5);
+    ctx.bezierCurveTo( r*.8,-r*1.5, r*1.1,-r*.3, 0, r*.7);
+    ctx.bezierCurveTo(-r*1.1,-r*.3,-r*.8,-r*1.5, 0,-r*1.5);
+    ctx.closePath();
+    const g=ctx.createRadialGradient(0,-r*.4,0,0,0,r*1.6);
+    g.addColorStop(0,p.ci); g.addColorStop(1,p.co); ctx.fillStyle=g; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0,-r*1.4); ctx.lineTo(0,r*.6);
+    ctx.strokeStyle=p.cv; ctx.lineWidth=.55; ctx.globalAlpha=p.alpha*.38; ctx.stroke();
+    ctx.restore();
+  }
+
+  const petals = Array.from({length:34}, () => mkp(true));
+  (function loop(){
+    ctx.clearRect(0,0,W(),H());
+    for(const p of petals){
+      p.sway+=p.swaySpeed; p.wobble+=p.wobbleSpeed;
+      p.x+=Math.sin(p.sway)*p.swayAmt; p.y+=p.speed+Math.sin(p.wobble)*.2;
+      p.rot+=p.rotSpeed+Math.sin(p.wobble)*.01;
+      if(p.y>H()+28) Object.assign(p, mkp(false), {x:Math.random()*W()});
+      drawPetal(p);
+    }
+    requestAnimationFrame(loop);
+  })();
+})();
+</script>
+</body>
+</html>
