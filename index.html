@@ -147,6 +147,26 @@ html,body{height:100%;background:linear-gradient(155deg,#ffe4ea,#ffd6de 50%,#ffe
 .day-ring span:first-child{font-size:22px;}
 .day-ring span:last-child{font-size:9px;color:var(--text-soft);letter-spacing:.05em;}
 
+
+/* BIRTHDAY CARDS */
+.bday-row{display:flex;gap:10px;margin:12px 20px 0;}
+.bday-card{flex:1;border-radius:20px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:4px;position:relative;overflow:hidden;transition:transform .2s;}
+.bday-card:hover{transform:translateY(-2px);}
+.bday-card.jm{background:linear-gradient(135deg,#e0f4ff,#c8e8ff);border:1.5px solid #a8d8f0;}
+.bday-card.cherry{background:linear-gradient(135deg,#fff0f3,#ffd6de);border:1.5px solid #ffb8c8;}
+.bday-name{font-family:'Playfair Display',serif;font-size:13px;font-weight:600;color:#2e1218;}
+.bday-date{font-size:10px;letter-spacing:.06em;color:#7a3f4f;opacity:.75;}
+.bday-count{font-family:'Playfair Display',serif;font-size:22px;line-height:1;color:#2e1218;}
+.bday-count.jm{color:#2a7aaa;}
+.bday-count.cherry{color:#e8899a;}
+.bday-sub{font-size:9px;color:#7a3f4f;opacity:.7;letter-spacing:.04em;}
+.bday-emoji{position:absolute;top:10px;right:12px;font-size:22px;}
+.bday-today{animation:bdayPulse 1.2s ease-in-out infinite;}
+@keyframes bdayPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.04);}}
+.confetti-wrap{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:20px;}
+.confetti-dot{position:absolute;width:5px;height:5px;border-radius:50%;animation:confettiFall linear infinite;}
+@keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1;}100%{transform:translateY(90px) rotate(360deg);opacity:0;}}
+
 /* SECTIONS */
 .section{padding:24px 20px 0;}
 .section-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
@@ -416,6 +436,24 @@ textarea.modal-field{height:90px;resize:none;line-height:1.5;}
         <div class="day-sub">beautiful days & counting 🌸</div>
       </div>
       <div class="day-ring"><span>💕</span><span>US</span></div>
+    </div>
+    <div class="bday-row">
+      <div class="bday-card jm" id="bday-jm">
+        <div class="confetti-wrap" id="confetti-jm"></div>
+        <div class="bday-emoji">🎂</div>
+        <div class="bday-name">J M</div>
+        <div class="bday-date">June 19</div>
+        <div class="bday-count jm" id="bday-count-jm">—</div>
+        <div class="bday-sub" id="bday-sub-jm">days away</div>
+      </div>
+      <div class="bday-card cherry" id="bday-cherry">
+        <div class="confetti-wrap" id="confetti-cherry"></div>
+        <div class="bday-emoji">🌸</div>
+        <div class="bday-name">Cherry</div>
+        <div class="bday-date">Feb 11</div>
+        <div class="bday-count cherry" id="bday-count-cherry">—</div>
+        <div class="bday-sub" id="bday-sub-cherry">days away</div>
+      </div>
     </div>
     <div class="section">
       <div class="section-row"><div class="section-title">Explore</div></div>
@@ -705,6 +743,7 @@ async function unlock(){
       document.getElementById('app').classList.remove('hidden');
       document.getElementById('bottom-nav').style.display = 'flex';
       countDays();
+      setupBirthdays();
       await loadAll();
     }, 800);
   } else {
@@ -1224,6 +1263,50 @@ function confirmDeleteBucketItem(id, text){
     await db.from('bucketlist').delete().eq('id',id);
     toast('Removed'); await loadBucketList();
   });
+}
+
+
+/* ════════════════════════
+   BIRTHDAY COUNTDOWNS
+════════════════════════ */
+function setupBirthdays(){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const birthdays = [
+    { id:'jm',     month:6,  day:19 },
+    { id:'cherry', month:2,  day:11 },
+  ];
+  birthdays.forEach(b => {
+    const thisYear = new Date(today.getFullYear(), b.month-1, b.day);
+    const nextYear = new Date(today.getFullYear()+1, b.month-1, b.day);
+    const target   = thisYear >= today ? thisYear : nextYear;
+    const days     = Math.round((target - today) / 86400000);
+    const countEl  = document.getElementById('bday-count-'+b.id);
+    const subEl    = document.getElementById('bday-sub-'+b.id);
+    const cardEl   = document.getElementById('bday-'+b.id);
+    if(days === 0){
+      countEl.textContent = '🎉';
+      subEl.textContent   = 'Happy Birthday!';
+      cardEl.classList.add('bday-today');
+      spawnConfetti(b.id);
+    } else {
+      countEl.textContent = days;
+      subEl.textContent   = days === 1 ? 'day away 🎀' : 'days away 🎀';
+    }
+  });
+}
+
+function spawnConfetti(id){
+  const wrap = document.getElementById('confetti-'+id);
+  const colors = id==='jm'
+    ? ['#a8d8f0','#7ac4e8','#c8e8ff','#ffffff','#5aafe0']
+    : ['#ffc0cb','#ffd6de','#ff9aad','#ffffff','#e8899a'];
+  for(let i=0;i<18;i++){
+    const dot = document.createElement('div');
+    dot.className = 'confetti-dot';
+    dot.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*20}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${1.2+Math.random()*1.6}s;animation-delay:${Math.random()*1.2}s;width:${3+Math.random()*4}px;height:${3+Math.random()*4}px;`;
+    wrap.appendChild(dot);
+  }
 }
 
 /* ════════════════════════
