@@ -621,7 +621,7 @@ const SUPABASE_URL      = 'https://gqfwkbwtiastltifajxu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_iEPyr617Hob6YByF5oYUdw_mf3DYIeN';
 
 /* ════ APP CONFIG ════ */
-const PASSWORD   = 'forever';
+const SHARED_EMAIL = 'junimarkjm@gmail.com'; // 👈 change to the email you used in Supabase
 const START_DATE = new Date('2024-06-02');
 
 const QUOTES = [
@@ -678,9 +678,20 @@ function toggleMusic(){
 }
 
 /* ════ UNLOCK ════ */
-function unlock(){
-  const val = document.getElementById('pw').value.trim().toLowerCase();
-  if(val === PASSWORD.toLowerCase()){
+async function unlock(){
+  const val = document.getElementById('pw').value.trim();
+  if(!val) return;
+
+  const btn = document.querySelector('.lock-btn');
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  const { error } = await db.auth.signInWithPassword({
+    email: SHARED_EMAIL,
+    password: val
+  });
+
+  if(!error){
     document.getElementById('lock-err').textContent = '';
     document.getElementById('lock').classList.add('out');
     playMusic();
@@ -696,6 +707,8 @@ function unlock(){
     f.classList.add('err');
     document.getElementById('lock-err').textContent = 'Hmm, try again 💕';
     setTimeout(() => f.classList.remove('err'), 400);
+    btn.disabled = false;
+    btn.textContent = 'Enter 🌸';
   }
 }
 document.getElementById('pw').addEventListener('keydown', e => { if(e.key==='Enter') unlock(); });
