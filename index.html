@@ -621,7 +621,7 @@ const SUPABASE_URL      = 'https://gqfwkbwtiastltifajxu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_iEPyr617Hob6YByF5oYUdw_mf3DYIeN';
 
 /* ════ APP CONFIG ════ */
-const SHARED_EMAIL = 'junimarkjm@gmail.com'; // 👈 change to the email you used in Supabase
+const SHARED_EMAIL = 'ourlittleworld@gmail.com'; // 👈 change to the email you used in Supabase
 const START_DATE = new Date('2024-06-02');
 
 const QUOTES = [
@@ -880,26 +880,35 @@ function closeFolder(){
 async function renderPhotoGrid(fid){
   showLoading('Loading photos...');
   const { data:list } = await db.from('photos').select('*').eq('folder_id', fid).order('uploaded_at', { ascending:false });
-  hideLoading();
   const photos = list || [];
   document.getElementById('folder-detail-sub').textContent = `${photos.length} photo${photos.length!==1?'s':''}`;
-  let html = photos.map(p => {
-    const url = getPublicUrl(p.file_path);
-    return `<div class="photo-thumb" onclick="openLightbox('${p.id}','${p.file_path}','${fid}','${p.uploaded_at}','${(p.caption||'').replace(/'/g,"\\'")}')">
-      <img src="${url}" loading="lazy"/>
+
+  let html = photos.map(p => `
+    <div class="photo-thumb" id="thumb-${p.id}" onclick="openLightbox('${p.id}','${p.file_path}','${fid}','${p.uploaded_at}','${(p.caption||'').replace(/'/g,"\'")}')">
+      <img src="" loading="lazy" style="opacity:0;transition:opacity .3s"/>
       <button class="del-x" onclick="event.stopPropagation();confirmDeletePhoto('${p.id}','${p.file_path}','${fid}')">✕</button>
-    </div>`;
-  }).join('');
+    </div>`).join('');
   html += `<div class="upload-tile">
     <span class="upload-tile-icon">＋</span><span class="upload-tile-label">Upload</span>
     <input type="file" accept="image/*" multiple onchange="handleUpload(event,'${fid}')"/>
   </div>`;
   document.getElementById('photo-grid-inner').innerHTML = html;
-}
+  hideLoading();
 
-function getPublicUrl(filePath){
-  const { data } = db.storage.from('photos').getPublicUrl(filePath);
-  return data.publicUrl;
+  await Promise.all(photos.map(async p => {
+    const url = await getSignedUrl(p.file_path);
+    const thumb = document.getElementById('thumb-'+p.id);
+    if(thumb && url){
+      const img = thumb.querySelector('img');
+      img.src = url;
+      img.onload = () => img.style.opacity = '1';
+    }
+  }));
+}
+async function getSignedUrl(filePath){
+  const { data, error } = await db.storage.from('photos').createSignedUrl(filePath, 3600);
+  if(error){ console.error('Signed URL error:', error); return ''; }
+  return data.signedUrl;
 }
 
 async function handleUpload(e, fid){
@@ -959,12 +968,14 @@ async function deletePhoto(photoId, filePath, fid){
 }
 
 /* ════ LIGHTBOX ════ */
-function openLightbox(photoId, filePath, fid, uploadedAt, caption){
+async function openLightbox(photoId, filePath, fid, uploadedAt, caption){
   _lbPhotoId=photoId; _lbFilePath=filePath; _lbFolderId=fid;
-  document.getElementById('lightbox-img').src  = getPublicUrl(filePath);
+  document.getElementById('lightbox-img').src = '';
   document.getElementById('lightbox-date').textContent = fmtDate(uploadedAt);
   document.getElementById('lightbox-cap').textContent  = caption||'';
   document.getElementById('lightbox').style.display = 'flex';
+  const url = await getSignedUrl(filePath);
+  document.getElementById('lightbox-img').src = url;
 }
 function closeLightbox(){ document.getElementById('lightbox').style.display='none'; }
 function deleteLightboxPhoto(){
@@ -985,13 +996,23 @@ async function updateRecentScroll(){
     return;
   }
   scroll.innerHTML = data.map(p => `
-    <div class="mem-card" onclick="goTab('photos');openFolder('${p.folder_id}');setTimeout(()=>openLightbox('${p.id}','${p.file_path}','${p.folder_id}','${p.uploaded_at}','${(p.caption||'').replace(/'/g,"\\'")}'),300)">
-      <div class="mem-ph"><img src="${getPublicUrl(p.file_path)}" loading="lazy"/></div>
+    <div class="mem-card" id="mem-${p.id}" onclick="goTab('photos');openFolder('${p.folder_id}');setTimeout(()=>openLightbox('${p.id}','${p.file_path}','${p.folder_id}','${p.uploaded_at}','${(p.caption||'').replace(/'/g,"\'")}'),300)">
+      <div class="mem-ph"><img src="" loading="lazy" style="opacity:0;transition:opacity .3s"/></div>
       <div class="mem-body">
         <div class="mem-who"><div class="mem-av">${p.folders?.emoji||'📷'}</div><div><div class="mem-name">${p.folders?.name||'Photos'}</div><div class="mem-date">${fmtDate(p.uploaded_at)}</div></div></div>
         <div class="mem-cap">${p.caption||'A beautiful memory 🌸'}</div>
       </div>
     </div>`).join('');
+
+  await Promise.all(data.map(async p => {
+    const url = await getSignedUrl(p.file_path);
+    const card = document.getElementById('mem-'+p.id);
+    if(card && url){
+      const img = card.querySelector('img');
+      img.src = url;
+      img.onload = () => img.style.opacity = '1';
+    }
+  }));
 }
 
 /* ════════════════════════
