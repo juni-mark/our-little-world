@@ -1107,7 +1107,7 @@ function mpRenderPlaylist(){
       '<div class="mp-pl-bars"><div class="mp-pl-bar"></div><div class="mp-pl-bar"></div><div class="mp-pl-bar"></div></div>' +
       '<span class="mp-pl-num">'+(i+1)+'</span>' +
       '<div class="mp-pl-info"><div class="mp-pl-name">'+(t.title||'Untitled')+'</div><div class="mp-pl-dur">'+(t.duration?mpFmtSecs(t.duration):'--:--')+'</div></div>' +
-      '<button class="mp-pl-del" onclick="event.stopPropagation();mpDeleteSong(''+t.id+'')">&#10005;</button>' +
+      '<button class="mp-pl-del" onclick="event.stopPropagation();mpDeleteSong(\"'+t.id+'\")">&#10005;</button>' +
     '</div>';
   }).join('');
 }
