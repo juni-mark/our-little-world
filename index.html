@@ -172,7 +172,6 @@ html,body{height:100%;background:linear-gradient(155deg,#ffe4ea,#ffd6de 50%,#ffe
 .day-ring span:first-child{font-size:22px;}
 .day-ring span:last-child{font-size:9px;color:var(--text-soft);letter-spacing:.05em;}
 
-
 /* BIRTHDAY CARDS */
 .bday-row{display:flex;gap:10px;margin:12px 20px 0;}
 .bday-card{flex:1;border-radius:20px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:4px;position:relative;overflow:hidden;transition:transform .2s;}
@@ -416,14 +415,6 @@ textarea.modal-field{height:90px;resize:none;line-height:1.5;}
 .phone.dark .mp-btn-play{background:#e8ccd7;color:#1a0a12;}
 .mp-btn-play:hover{opacity:.88;}
 
-.mp-volume{display:flex;align-items:center;gap:10px;padding:0 24px 12px;}
-.mp-vol-icon{font-size:13px;opacity:.4;color:var(--text);}
-.phone.dark .mp-vol-icon{color:#f0eef0;}
-.mp-vol-track{flex:1;height:3px;border-radius:2px;cursor:pointer;background:#e8ccd7;}
-.phone.dark .mp-vol-track{background:#3a2830;}
-.mp-vol-fill{height:100%;border-radius:2px;background:#9a3a58;pointer-events:none;}
-.phone.dark .mp-vol-fill{background:#e8ccd7;}
-
 .mp-divider{height:1px;margin:0 24px 12px;background:#e8ccd7;opacity:.6;}
 .phone.dark .mp-divider{background:#3a2830;}
 
@@ -438,9 +429,7 @@ textarea.modal-field{height:90px;resize:none;line-height:1.5;}
 .phone.dark .mp-pl-item:hover,.phone.dark .mp-pl-item.mp-active{background:#1e1218;}
 .mp-pl-num{width:16px;text-align:center;font-size:12px;flex-shrink:0;color:var(--text-soft);}
 .phone.dark .mp-pl-num{color:#806070;}
-.mp-pl-item.mp-active .mp-pl-num{display:none;}
-.mp-pl-bars{width:16px;display:none;align-items:flex-end;gap:2px;height:14px;flex-shrink:0;}
-.mp-pl-item.mp-active .mp-pl-bars{display:flex;}
+.mp-pl-bars{width:16px;align-items:flex-end;gap:2px;height:14px;flex-shrink:0;}
 .mp-pl-bar{width:3px;border-radius:1px;background:#9a3a58;}
 .phone.dark .mp-pl-bar{background:#e8ccd7;}
 .mp-pl-bar:nth-child(1){height:5px;animation:mpb .55s ease-in-out infinite alternate;}
@@ -695,7 +684,6 @@ textarea.modal-field{height:90px;resize:none;line-height:1.5;}
     <div class="spacer"></div>
   </div>
 
-
   <!-- MUSIC PLAYER -->
   <div class="page" id="page-music">
     <div class="music-top-bar">
@@ -734,7 +722,7 @@ textarea.modal-field{height:90px;resize:none;line-height:1.5;}
     </div>
 
     <div class="mp-progress">
-      <div class="mp-prog-track" id="mp-prog-track" onclick="mpSeek(event)">
+      <div class="mp-prog-track" id="mp-prog-track">
         <div class="mp-prog-fill" id="mp-prog-fill" style="width:0%"></div>
       </div>
       <div class="mp-times"><span id="mp-time-cur">0:00</span><span id="mp-time-tot">0:00</span></div>
@@ -764,14 +752,6 @@ textarea.modal-field{height:90px;resize:none;line-height:1.5;}
           <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/>
         </svg>
       </button>
-    </div>
-
-    <div class="mp-volume">
-      <span class="mp-vol-icon">&#128264;</span>
-      <div class="mp-vol-track" id="mp-vol-track" onclick="mpSetVol(event)">
-        <div class="mp-vol-fill" id="mp-vol-fill" style="width:70%"></div>
-      </div>
-      <span class="mp-vol-icon">&#128266;</span>
     </div>
 
     <div class="mp-divider"></div>
@@ -907,16 +887,14 @@ textarea.modal-field{height:90px;resize:none;line-height:1.5;}
 
 <script>
 /* ════════════════════════════════════════════
-   🌸 STEP 1 — PASTE YOUR SUPABASE KEYS HERE
-   supabase.com → your project
-   → Project Settings → API
+   🌸 SUPABASE KEYS
 ════════════════════════════════════════════ */
 const SUPABASE_URL      = 'https://gqfwkbwtiastltifajxu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxZndrYnd0aWFzdGx0aWZhanh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxOTIwNzEsImV4cCI6MjA5MDc2ODA3MX0.6y25kJ8vCQoXu-S__HJhPDk8EIjBPBNRMA3FYvPj0oE';
 
 /* ════ APP CONFIG ════ */
-const SHARED_EMAIL = 'junimarkjm@gmail.com'; // 👈 change to the email you used in Supabase
-const START_DATE = new Date('2024-06-02');
+const SHARED_EMAIL = 'junimarkjm@gmail.com';
+const START_DATE   = new Date('2024-06-02');
 
 const QUOTES = [
   'You are my today and all of my tomorrows. 💕',
@@ -952,12 +930,9 @@ function toast(msg, ms=2600){
 }
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function fmtDate(iso){ return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
 
-function fmtDate(iso){
-  return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-}
-
-/* ════ MUSIC ════ */
+/* ════ BGM (home music button) ════ */
 let musicPlaying = false;
 function playMusic(){
   document.getElementById('bgm').play()
@@ -975,16 +950,9 @@ function toggleMusic(){
 async function unlock(){
   const val = document.getElementById('pw').value.trim();
   if(!val) return;
-
   const btn = document.querySelector('.lock-btn');
-  btn.disabled = true;
-  btn.textContent = '...';
-
-  const { error } = await db.auth.signInWithPassword({
-    email: SHARED_EMAIL,
-    password: val
-  });
-
+  btn.disabled = true; btn.textContent = '...';
+  const { error } = await db.auth.signInWithPassword({ email: SHARED_EMAIL, password: val });
   if(!error){
     document.getElementById('lock-err').textContent = '';
     document.getElementById('lock').classList.add('out');
@@ -1002,8 +970,7 @@ async function unlock(){
     f.classList.add('err');
     document.getElementById('lock-err').textContent = 'Hmm, try again 💕';
     setTimeout(() => f.classList.remove('err'), 400);
-    btn.disabled = false;
-    btn.textContent = 'Enter 🌸';
+    btn.disabled = false; btn.textContent = 'Enter 🌸';
   }
 }
 document.getElementById('pw').addEventListener('keydown', e => { if(e.key==='Enter') unlock(); });
@@ -1011,6 +978,7 @@ document.getElementById('pw').addEventListener('keydown', e => { if(e.key==='Ent
 /* ════ LOAD ALL ════ */
 async function loadAll(){
   showLoading('Loading our world... 🌸');
+  mpResetBar();
   try {
     await Promise.all([loadFolders(), loadMilestones(), loadNotes(), loadBucketList(), mpLoad()]);
     await updateRecentScroll();
@@ -1060,15 +1028,11 @@ function toggleDarkMode(){
   const txt  = document.getElementById('dark-pill-txt');
   if(appDarkMode){
     txt.textContent = 'Light';
-    icon.setAttribute('fill','none');
-    icon.setAttribute('stroke','currentColor');
-    icon.setAttribute('stroke-width','2');
+    icon.setAttribute('fill','none'); icon.setAttribute('stroke','currentColor'); icon.setAttribute('stroke-width','2');
     icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
   } else {
     txt.textContent = 'Dark';
-    icon.setAttribute('fill','currentColor');
-    icon.removeAttribute('stroke');
-    icon.removeAttribute('stroke-width');
+    icon.setAttribute('fill','currentColor'); icon.removeAttribute('stroke'); icon.removeAttribute('stroke-width');
     icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/>';
   }
 }
@@ -1085,14 +1049,23 @@ let mpHeart    = true;
 let mpAudio    = null;
 let mpTimer    = null;
 
+/* Reset progress bar to zero */
+function mpResetBar(){
+  clearInterval(mpTimer);
+  document.getElementById('mp-prog-fill').style.width = '0%';
+  document.getElementById('mp-time-cur').textContent  = '0:00';
+  document.getElementById('mp-time-tot').textContent  = '0:00';
+}
+
 async function mpLoad(){
   const { data } = await db.from('playlist').select('*').order('created_at',{ascending:true});
   mpPlaylist = data || [];
   mpRenderPlaylist();
 }
 
+/* Render playlist — bars only animate when actually playing */
 function mpRenderPlaylist(){
-  const el = document.getElementById('mp-playlist');
+  const el   = document.getElementById('mp-playlist');
   if(!el) return;
   const meta = document.getElementById('mp-pl-meta');
   if(!mpPlaylist.length){
@@ -1101,13 +1074,20 @@ function mpRenderPlaylist(){
     return;
   }
   if(meta) meta.textContent = mpPlaylist.length + ' song' + (mpPlaylist.length!==1?'s':'');
+
   el.innerHTML = mpPlaylist.map((t,i) => {
-    const active = i===mpCurrent ? 'mp-active' : '';
-    return '<div class="mp-pl-item ' + active + '" onclick="mpSelectTrack('+i+')">' +
-      '<div class="mp-pl-bars"><div class="mp-pl-bar"></div><div class="mp-pl-bar"></div><div class="mp-pl-bar"></div></div>' +
-      '<span class="mp-pl-num">'+(i+1)+'</span>' +
-      '<div class="mp-pl-info"><div class="mp-pl-name">'+(t.title||'Untitled')+'</div><div class="mp-pl-dur">'+(t.duration?mpFmtSecs(t.duration):'--:--')+'</div></div>' +
-      '<button class="mp-pl-del" onclick="event.stopPropagation();mpDeleteSong(\"'+t.id+'\")">&#10005;</button>' +
+    const isActive  = i === mpCurrent;
+    const isPlaying = isActive && mpPlaying;
+    return '<div class="mp-pl-item ' + (isActive ? 'mp-active' : '') + '" onclick="mpSelectTrack('+i+')">' +
+      '<div class="mp-pl-bars" style="display:' + (isPlaying ? 'flex' : 'none') + '">' +
+        '<div class="mp-pl-bar"></div><div class="mp-pl-bar"></div><div class="mp-pl-bar"></div>' +
+      '</div>' +
+      '<span class="mp-pl-num" style="display:' + (isPlaying ? 'none' : 'inline') + '">'+(i+1)+'</span>' +
+      '<div class="mp-pl-info">' +
+        '<div class="mp-pl-name">'+(t.title||'Untitled')+'</div>' +
+        '<div class="mp-pl-dur">'+(t.duration?mpFmtSecs(t.duration):'--:--')+'</div>' +
+      '</div>' +
+      '<button class="mp-pl-del" onclick="event.stopPropagation();mpDeleteSong(\''+t.id+'\')">&#10005;</button>' +
     '</div>';
   }).join('');
 }
@@ -1122,8 +1102,8 @@ async function mpSelectTrack(idx){
   mpCurrent = idx;
   const track = mpPlaylist[idx];
   document.getElementById('np-song-title').textContent = track.title||'Untitled';
-  document.getElementById('mp-time-cur').textContent = '0:00';
-  document.getElementById('mp-prog-fill').style.width = '0%';
+  document.getElementById('mp-time-cur').textContent   = '0:00';
+  document.getElementById('mp-prog-fill').style.width  = '0%';
   if(mpAudio){ mpAudio.pause(); clearInterval(mpTimer); }
   let url = '';
   if(track.is_external_url){
@@ -1134,105 +1114,126 @@ async function mpSelectTrack(idx){
     url = data.signedUrl;
   }
   mpAudio = new Audio(url);
-  mpAudio.volume = parseFloat(document.getElementById('mp-vol-fill').style.width)/100 || 0.7;
-  mpAudio.play().then(()=>{
+  mpAudio.volume = 1.0; // iPhone volume controls this
+  mpAudio.play().then(() => {
     mpPlaying = true;
     document.getElementById('vinyl-disc').classList.add('spinning');
     document.getElementById('vinyl-tonearm').classList.add('on');
     document.getElementById('mp-play-path').setAttribute('d','M6 19h4V5H6v14zm8-14v14h4V5h-4z');
     mpStartTimer();
-  }).catch(e=>{ toast('Playback error'); console.error(e); });
-  mpAudio.addEventListener('loadedmetadata',()=>{
+    mpRenderPlaylist();
+  }).catch(e => { toast('Playback error'); console.error(e); });
+  mpAudio.addEventListener('loadedmetadata', () => {
     document.getElementById('mp-time-tot').textContent = mpFmtSecs(mpAudio.duration);
     mpPlaylist[idx].duration = mpAudio.duration;
   });
-  mpAudio.addEventListener('ended',()=>{
+  mpAudio.addEventListener('ended', () => {
     if(mpRepeat){ mpAudio.currentTime=0; mpAudio.play(); }
     else if(mpShuffle){ mpSelectTrack(Math.floor(Math.random()*mpPlaylist.length)); }
     else mpNext();
   });
-  mpRenderPlaylist();
 }
 
+/* Progress timer — only ticks when audio is loaded and playing */
 function mpStartTimer(){
   clearInterval(mpTimer);
-  mpTimer = setInterval(()=>{
-    if(!mpAudio||mpAudio.paused) return;
-    const pct = mpAudio.duration ? (mpAudio.currentTime/mpAudio.duration*100) : 0;
-    document.getElementById('mp-prog-fill').style.width = pct+'%';
-    document.getElementById('mp-time-cur').textContent = mpFmtSecs(mpAudio.currentTime);
-  },500);
+  if(!mpAudio || !mpAudio.duration) return;
+  mpTimer = setInterval(() => {
+    if(!mpAudio || mpAudio.paused || !mpAudio.duration) return;
+    const pct = (mpAudio.currentTime / mpAudio.duration) * 100;
+    document.getElementById('mp-prog-fill').style.width = pct + '%';
+    document.getElementById('mp-time-cur').textContent  = mpFmtSecs(mpAudio.currentTime);
+  }, 500);
 }
+
+/* Draggable progress bar */
+let _mpProgDragging = false;
+setTimeout(() => {
+  const track = document.getElementById('mp-prog-track');
+  if(!track) return;
+  function applySeek(clientX){
+    if(!mpAudio || !mpAudio.duration) return;
+    const r   = track.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+    mpAudio.currentTime = pct * mpAudio.duration;
+    document.getElementById('mp-prog-fill').style.width = (pct * 100) + '%';
+  }
+  track.addEventListener('mousedown',  e => { _mpProgDragging=true; applySeek(e.clientX); });
+  document.addEventListener('mousemove', e => { if(_mpProgDragging) applySeek(e.clientX); });
+  document.addEventListener('mouseup',   () => { _mpProgDragging=false; });
+  track.addEventListener('touchstart', e => { _mpProgDragging=true; applySeek(e.touches[0].clientX); e.preventDefault(); }, { passive:false });
+  document.addEventListener('touchmove', e => { if(_mpProgDragging) applySeek(e.touches[0].clientX); }, { passive:true });
+  document.addEventListener('touchend',  () => { _mpProgDragging=false; });
+}, 0);
 
 function mpTogglePlay(){
   if(!mpPlaylist.length){ toast('Upload a song first 🎵'); return; }
   if(!mpAudio){ mpSelectTrack(mpCurrent); return; }
   if(mpAudio.paused){
     mpAudio.play();
-    mpPlaying=true;
+    mpPlaying = true;
     document.getElementById('vinyl-disc').classList.add('spinning');
     document.getElementById('vinyl-tonearm').classList.add('on');
     document.getElementById('mp-play-path').setAttribute('d','M6 19h4V5H6v14zm8-14v14h4V5h-4z');
     mpStartTimer();
   } else {
     mpAudio.pause();
-    mpPlaying=false;
+    mpPlaying = false;
     document.getElementById('vinyl-disc').classList.remove('spinning');
     document.getElementById('vinyl-tonearm').classList.remove('on');
     document.getElementById('mp-play-path').setAttribute('d','M8 5v14l11-7z');
   }
+  mpRenderPlaylist();
 }
-function mpNext(){ mpSelectTrack((mpCurrent+1)%mpPlaylist.length); }
-function mpPrev(){ mpSelectTrack((mpCurrent-1+mpPlaylist.length)%mpPlaylist.length); }
+
+function mpNext(){ mpSelectTrack((mpCurrent+1) % mpPlaylist.length); }
+function mpPrev(){ mpSelectTrack((mpCurrent-1+mpPlaylist.length) % mpPlaylist.length); }
+
 function mpToggleShuffle(){
-  mpShuffle=!mpShuffle;
-  document.getElementById('mp-shuffle').classList.toggle('on',mpShuffle);
+  mpShuffle = !mpShuffle;
+  document.getElementById('mp-shuffle').classList.toggle('on', mpShuffle);
 }
 function mpToggleRepeat(){
-  mpRepeat=!mpRepeat;
-  document.getElementById('mp-repeat').classList.toggle('on',mpRepeat);
+  mpRepeat = !mpRepeat;
+  document.getElementById('mp-repeat').classList.toggle('on', mpRepeat);
 }
 function toggleHeart(){
-  mpHeart=!mpHeart;
-  document.getElementById('np-heart').classList.toggle('on',mpHeart);
+  mpHeart = !mpHeart;
+  document.getElementById('np-heart').classList.toggle('on', mpHeart);
 }
-function mpSeek(e){
-  if(!mpAudio||!mpAudio.duration) return;
-  const r=e.currentTarget.getBoundingClientRect();
-  mpAudio.currentTime=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*mpAudio.duration;
-}
-function mpSetVol(e){
-  const r=e.currentTarget.getBoundingClientRect();
-  const v=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
-  document.getElementById('mp-vol-fill').style.width=(v*100)+'%';
-  if(mpAudio) mpAudio.volume=v;
-}
+
 async function mpHandleUpload(e){
-  const file=e.target.files[0];
+  const file = e.target.files[0];
   if(!file) return;
-  if(file.size>10*1024*1024){ toast('File too large (max 10MB)'); return; }
-  const name=file.name.replace(/\.[^.]+$/,'').replace(/_/g,' ');
+  if(file.size > 10*1024*1024){ toast('File too large (max 10MB)'); return; }
+  const name = file.name.replace(/\.[^.]+$/,'').replace(/_/g,' ');
   showLoading('Uploading 🎵');
-  const path='songs/'+uid()+'_'+file.name.replace(/\s/g,'_');
-  const {error}=await db.storage.from('playlist').upload(path,file,{contentType:file.type});
+  const path = 'songs/'+uid()+'_'+file.name.replace(/\s/g,'_');
+  const { error } = await db.storage.from('playlist').upload(path, file, { contentType: file.type });
   if(error){ hideLoading(); toast('Upload failed — check playlist bucket'); return; }
-  const dur=await new Promise(res=>{ const a=new Audio(URL.createObjectURL(file)); a.addEventListener('loadedmetadata',()=>res(a.duration)); a.addEventListener('error',()=>res(0)); });
-  await db.from('playlist').insert({title:name,file_path:path,duration:dur,is_external_url:false});
+  const dur = await new Promise(res => {
+    const a = new Audio(URL.createObjectURL(file));
+    a.addEventListener('loadedmetadata', () => res(a.duration));
+    a.addEventListener('error', () => res(0));
+  });
+  await db.from('playlist').insert({ title:name, file_path:path, duration:dur, is_external_url:false });
   hideLoading(); toast(name+' added! 🎵');
   await mpLoad();
 }
+
 async function mpDeleteSong(id){
-  const track=mpPlaylist.find(t=>t.id===id);
+  const track = mpPlaylist.find(t => t.id===id);
   if(!track) return;
   showLoading('Removing...');
   if(!track.is_external_url) await db.storage.from('playlist').remove([track.file_path]);
-  await db.from('playlist').delete().eq('id',id);
+  await db.from('playlist').delete().eq('id', id);
   hideLoading(); toast('Song removed');
   if(mpAudio && mpPlaylist[mpCurrent]?.id===id){
     mpAudio.pause(); mpAudio=null; mpPlaying=false;
     document.getElementById('vinyl-disc').classList.remove('spinning');
     document.getElementById('vinyl-tonearm').classList.remove('on');
     document.getElementById('mp-play-path').setAttribute('d','M8 5v14l11-7z');
+    mpResetBar();
   }
   await mpLoad();
 }
@@ -1261,10 +1262,10 @@ document.querySelectorAll('.modal-overlay').forEach(o => {
   o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
 });
 function showConfirm(icon, title, sub, onYes){
-  document.getElementById('confirm-icon').textContent = icon;
+  document.getElementById('confirm-icon').textContent  = icon;
   document.getElementById('confirm-title').textContent = title;
-  document.getElementById('confirm-sub').textContent = sub;
-  document.getElementById('confirm-yes-btn').onclick = () => { closeModal('confirm-modal'); onYes(); };
+  document.getElementById('confirm-sub').textContent   = sub;
+  document.getElementById('confirm-yes-btn').onclick   = () => { closeModal('confirm-modal'); onYes(); };
   openModal('confirm-modal');
 }
 
@@ -1276,10 +1277,9 @@ let currentFolderId = null;
 let _lbFolderId = null, _lbFilePath = null, _lbPhotoId = null;
 
 async function loadFolders(){
-  const { data, error } = await db.from('folders').select('*').order('created_at', { ascending:true });
+  const { data, error } = await db.from('folders').select('*').order('created_at',{ascending:true});
   if(error){ console.error(error); return; }
   folders = data || [];
-  // seed defaults if empty
   if(!folders.length){
     const seeds = [
       { name:'Our Selfies', emoji:'🤳', color:'#ffeef2' },
@@ -1305,9 +1305,8 @@ function renderFolders(){
   });
   html += `<div class="add-folder-card" onclick="openNewFolderModal()"><div class="add-folder-icon">＋</div><div class="add-folder-label">New Folder</div></div>`;
   document.getElementById('folder-grid').innerHTML = html;
-  // load counts
   folders.forEach(async f => {
-    const { count } = await db.from('photos').select('id', { count:'exact', head:true }).eq('folder_id', f.id);
+    const { count } = await db.from('photos').select('id',{count:'exact',head:true}).eq('folder_id',f.id);
     const el = document.getElementById('fc-'+f.id);
     if(el) el.textContent = `${count||0} photo${count!==1?'s':''}`;
   });
@@ -1331,14 +1330,14 @@ async function saveNewFolder(){
 }
 
 function confirmDeleteFolder(id, name){
-  showConfirm('🗂', 'Delete this folder?', `"${name}" and all photos inside will be permanently removed.`, () => deleteFolder(id));
+  showConfirm('🗂','Delete this folder?',`"${name}" and all photos inside will be permanently removed.`, () => deleteFolder(id));
 }
 async function deleteFolder(id){
   showLoading('Deleting folder...');
-  const { data:ph } = await db.from('photos').select('file_path').eq('folder_id', id);
+  const { data:ph } = await db.from('photos').select('file_path').eq('folder_id',id);
   if(ph?.length) await db.storage.from('photos').remove(ph.map(p => p.file_path));
-  await db.from('photos').delete().eq('folder_id', id);
-  await db.from('folders').delete().eq('id', id);
+  await db.from('photos').delete().eq('folder_id',id);
+  await db.from('folders').delete().eq('id',id);
   hideLoading(); toast('Folder deleted');
   await loadFolders();
   await updateRecentScroll();
@@ -1348,25 +1347,24 @@ async function openFolder(fid){
   currentFolderId = fid;
   const f = folders.find(x => x.id===fid);
   document.getElementById('folder-detail-name').textContent = f.emoji + ' ' + f.name;
-  document.getElementById('view-folders').style.display = 'none';
+  document.getElementById('view-folders').style.display      = 'none';
   document.getElementById('view-folder-detail').style.display = 'block';
   await renderPhotoGrid(fid);
 }
 function closeFolder(){
   currentFolderId = null;
-  document.getElementById('view-folders').style.display = 'block';
+  document.getElementById('view-folders').style.display       = 'block';
   document.getElementById('view-folder-detail').style.display = 'none';
   renderFolders();
 }
 
 async function renderPhotoGrid(fid){
   showLoading('Loading photos...');
-  const { data:list } = await db.from('photos').select('*').eq('folder_id', fid).order('uploaded_at', { ascending:false });
+  const { data:list } = await db.from('photos').select('*').eq('folder_id',fid).order('uploaded_at',{ascending:false});
   const photos = list || [];
   document.getElementById('folder-detail-sub').textContent = `${photos.length} photo${photos.length!==1?'s':''}`;
-
   let html = photos.map(p => `
-    <div class="photo-thumb" id="thumb-${p.id}" onclick="openLightbox('${p.id}','${p.file_path}','${fid}','${p.uploaded_at}','${(p.caption||'').replace(/'/g,"\'")}')">
+    <div class="photo-thumb" id="thumb-${p.id}" onclick="openLightbox('${p.id}','${p.file_path}','${fid}','${p.uploaded_at}','${(p.caption||'').replace(/'/g,"\\'")}')">
       <img src="" loading="lazy" style="opacity:0;transition:opacity .3s"/>
       <button class="del-x" onclick="event.stopPropagation();confirmDeletePhoto('${p.id}','${p.file_path}','${fid}')">✕</button>
     </div>`).join('');
@@ -1376,17 +1374,13 @@ async function renderPhotoGrid(fid){
   </div>`;
   document.getElementById('photo-grid-inner').innerHTML = html;
   hideLoading();
-
   await Promise.all(photos.map(async p => {
-    const url = await getSignedUrl(p.file_path);
+    const url   = await getSignedUrl(p.file_path);
     const thumb = document.getElementById('thumb-'+p.id);
-    if(thumb && url){
-      const img = thumb.querySelector('img');
-      img.src = url;
-      img.onload = () => img.style.opacity = '1';
-    }
+    if(thumb && url){ const img = thumb.querySelector('img'); img.src=url; img.onload=()=>img.style.opacity='1'; }
   }));
 }
+
 async function getSignedUrl(filePath){
   const { data, error } = await db.storage.from('photos').createSignedUrl(filePath, 3600);
   if(error){ console.error('Signed URL error:', error); return ''; }
@@ -1401,7 +1395,7 @@ async function handleUpload(e, fid){
   for(const file of files){
     try {
       const blob = await compressImage(file, 1200, 0.82);
-      const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const ext  = (file.name.split('.').pop()||'jpg').toLowerCase();
       const path = `${fid}/${uid()}.${ext}`;
       const { error:upErr } = await db.storage.from('photos').upload(path, blob, { contentType: blob.type||'image/jpeg' });
       if(upErr){ console.error(upErr); continue; }
@@ -1424,7 +1418,7 @@ function compressImage(file, maxPx, quality){
       const img = new Image();
       img.onload = () => {
         let {width:w, height:h} = img;
-        if(w>maxPx || h>maxPx){ const r=Math.min(maxPx/w,maxPx/h); w=Math.round(w*r); h=Math.round(h*r); }
+        if(w>maxPx||h>maxPx){ const r=Math.min(maxPx/w,maxPx/h); w=Math.round(w*r); h=Math.round(h*r); }
         const cv = document.createElement('canvas'); cv.width=w; cv.height=h;
         cv.getContext('2d').drawImage(img,0,0,w,h);
         cv.toBlob(blob => resolve(blob), 'image/jpeg', quality);
@@ -1442,7 +1436,7 @@ function confirmDeletePhoto(photoId, filePath, fid){
 async function deletePhoto(photoId, filePath, fid){
   showLoading('Removing...');
   await db.storage.from('photos').remove([filePath]);
-  await db.from('photos').delete().eq('id', photoId);
+  await db.from('photos').delete().eq('id',photoId);
   hideLoading(); toast('Photo removed');
   await renderPhotoGrid(fid);
   renderFolders();
@@ -1455,35 +1449,35 @@ async function openLightbox(photoId, filePath, fid, uploadedAt, caption){
   document.getElementById('lightbox-img').src = '';
   document.getElementById('lightbox-date').textContent = fmtDate(uploadedAt);
   document.getElementById('lightbox-cap').textContent  = caption||'';
-  document.getElementById('lightbox-cap').style.display = 'block';
+  document.getElementById('lightbox-cap').style.display       = 'block';
   document.getElementById('lightbox-cap-input').style.display = 'none';
-  document.getElementById('lightbox-cap-save').style.display = 'none';
+  document.getElementById('lightbox-cap-save').style.display  = 'none';
   document.getElementById('lightbox').style.display = 'flex';
   const url = await getSignedUrl(filePath);
   document.getElementById('lightbox-img').src = url;
 }
 function closeLightbox(){
-  document.getElementById('lightbox').style.display='none';
-  document.getElementById('lightbox-cap').style.display = 'block';
+  document.getElementById('lightbox').style.display = 'none';
+  document.getElementById('lightbox-cap').style.display       = 'block';
   document.getElementById('lightbox-cap-input').style.display = 'none';
-  document.getElementById('lightbox-cap-save').style.display = 'none';
+  document.getElementById('lightbox-cap-save').style.display  = 'none';
 }
 function startEditCaption(){
   const current = document.getElementById('lightbox-cap').textContent;
   document.getElementById('lightbox-cap-input').value = current;
-  document.getElementById('lightbox-cap').style.display = 'none';
+  document.getElementById('lightbox-cap').style.display       = 'none';
   document.getElementById('lightbox-cap-input').style.display = 'block';
-  document.getElementById('lightbox-cap-save').style.display = 'inline-block';
+  document.getElementById('lightbox-cap-save').style.display  = 'inline-block';
   document.getElementById('lightbox-cap-input').focus();
 }
 async function saveCaption(){
   const newCaption = document.getElementById('lightbox-cap-input').value.trim();
-  const { error } = await db.from('photos').update({ caption: newCaption }).eq('id', _lbPhotoId);
+  const { error } = await db.from('photos').update({ caption:newCaption }).eq('id',_lbPhotoId);
   if(error){ toast('Could not save caption 😔'); return; }
-  document.getElementById('lightbox-cap').textContent = newCaption;
-  document.getElementById('lightbox-cap').style.display = 'block';
+  document.getElementById('lightbox-cap').textContent         = newCaption;
+  document.getElementById('lightbox-cap').style.display       = 'block';
   document.getElementById('lightbox-cap-input').style.display = 'none';
-  document.getElementById('lightbox-cap-save').style.display = 'none';
+  document.getElementById('lightbox-cap-save').style.display  = 'none';
   toast('Caption saved 🌸');
   if(_lbFolderId) renderPhotoGrid(_lbFolderId);
   updateRecentScroll();
@@ -1501,27 +1495,22 @@ async function updateRecentScroll(){
     .order('uploaded_at',{ascending:false})
     .limit(8);
   const scroll = document.getElementById('recent-scroll');
-  if(!data || !data.length){
+  if(!data||!data.length){
     scroll.innerHTML = `<div class="mem-card"><div class="mem-ph" style="background:linear-gradient(135deg,#ffeef2,#ffc0cb)"><span style="font-size:34px">📷</span><span style="font-size:10px;color:var(--text-soft)">No photos yet</span></div><div class="mem-body"><div class="mem-who"><div class="mem-av">🌸</div><div><div class="mem-name">Us</div></div></div><div class="mem-cap">Tap Photos to start 💕</div></div></div>`;
     return;
   }
   scroll.innerHTML = data.map(p => `
-    <div class="mem-card" id="mem-${p.id}" onclick="goTab('photos');openFolder('${p.folder_id}');setTimeout(()=>openLightbox('${p.id}','${p.file_path}','${p.folder_id}','${p.uploaded_at}','${(p.caption||'').replace(/'/g,"\'")}'),300)">
+    <div class="mem-card" id="mem-${p.id}" onclick="goTab('photos');openFolder('${p.folder_id}');setTimeout(()=>openLightbox('${p.id}','${p.file_path}','${p.folder_id}','${p.uploaded_at}','${(p.caption||'').replace(/'/g,"\\'")}'),300)">
       <div class="mem-ph"><img src="" loading="lazy" style="opacity:0;transition:opacity .3s"/></div>
       <div class="mem-body">
         <div class="mem-who"><div class="mem-av">${p.folders?.emoji||'📷'}</div><div><div class="mem-name">${p.folders?.name||'Photos'}</div><div class="mem-date">${fmtDate(p.uploaded_at)}</div></div></div>
         <div class="mem-cap">${p.caption||'A beautiful memory 🌸'}</div>
       </div>
     </div>`).join('');
-
   await Promise.all(data.map(async p => {
-    const url = await getSignedUrl(p.file_path);
+    const url  = await getSignedUrl(p.file_path);
     const card = document.getElementById('mem-'+p.id);
-    if(card && url){
-      const img = card.querySelector('img');
-      img.src = url;
-      img.onload = () => img.style.opacity = '1';
-    }
+    if(card&&url){ const img=card.querySelector('img'); img.src=url; img.onload=()=>img.style.opacity='1'; }
   }));
 }
 
@@ -1533,15 +1522,12 @@ async function loadMilestones(){
   const { data } = await db.from('milestones').select('*').order('date',{ascending:true});
   milestones = data || [];
   if(!milestones.length){
-    await db.from('milestones').insert([
-      { title:'The beginning', description:'The day our story started 💕', emoji:'🌸', date:'2024-06-02' },
-    ]);
+    await db.from('milestones').insert([{ title:'The beginning', description:'The day our story started 💕', emoji:'🌸', date:'2024-06-02' }]);
     const { data:d2 } = await db.from('milestones').select('*').order('date',{ascending:true});
     milestones = d2 || [];
   }
   renderTimeline();
 }
-
 function renderTimeline(){
   const el = document.getElementById('timeline-list');
   if(!milestones.length){ el.innerHTML=`<div class="empty-msg">No milestones yet 🌸<br>Tap ＋ to add your first!</div>`; return; }
@@ -1559,7 +1545,6 @@ function renderTimeline(){
       </div>
     </div>`).join('');
 }
-
 function openMilestoneModal(){
   buildEmojiPicker('ms-emoji-row', MS_EMOJIS, 'ms');
   document.getElementById('ms-title').value = '';
@@ -1570,7 +1555,7 @@ function openMilestoneModal(){
 async function saveMilestone(){
   const title = document.getElementById('ms-title').value.trim();
   if(!title){ document.getElementById('ms-title').focus(); return; }
-  const date  = document.getElementById('ms-date').value || new Date().toISOString().slice(0,10);
+  const date        = document.getElementById('ms-date').value || new Date().toISOString().slice(0,10);
   const description = document.getElementById('ms-desc').value.trim();
   showLoading('Saving...');
   const { error } = await db.from('milestones').insert({ title, description, emoji:selectedEmojis['ms']||'🌸', date });
@@ -1600,15 +1585,13 @@ async function loadNotes(){
   }
   renderNotes(); renderHomeNotes(); updateNotesBadge();
 }
-
 function noteCardHTML(n, showDel=true){
-  const today = new Date().toISOString().slice(0,10);
+  const today  = new Date().toISOString().slice(0,10);
   const locked = n.unlock_date && today < n.unlock_date;
-  const dateStr = fmtDate(n.created_at);
   return `<div class="note-card">
     <div class="note-av">${n.emoji}</div>
     <div class="note-meta">
-      <div class="note-top"><span class="note-name">${n.from_name}</span><span class="note-time">${dateStr}</span></div>
+      <div class="note-top"><span class="note-name">${n.from_name}</span><span class="note-time">${fmtDate(n.created_at)}</span></div>
       <div class="note-text">${locked
         ? `<div class="note-locked">🔒 Unlocks on ${n.unlock_date}</div>`
         : `"${n.text}"`
@@ -1626,7 +1609,6 @@ function renderHomeNotes(){
   el.innerHTML = notes.slice(0,2).map(n=>noteCardHTML(n,false)).join('') || `<div style="font-size:12px;color:var(--text-soft);padding:4px 0">Write something sweet 🌸</div>`;
 }
 function updateNotesBadge(){ document.getElementById('notes-badge').textContent = notes.length; }
-
 function openNoteModal(){
   buildEmojiPicker('note-emoji-row', NOTE_EMOJIS, 'note');
   document.getElementById('note-from').value   = '';
@@ -1667,7 +1649,6 @@ async function loadBucketList(){
   }
   renderBucketList();
 }
-
 function renderBucketList(){
   const el = document.getElementById('bucket-list');
   if(!bucketlist.length){ el.innerHTML=`<div class="empty-msg">No plans yet ✨<br>Add something fun!</div>`; return; }
@@ -1679,7 +1660,6 @@ function renderBucketList(){
       <button class="note-del" onclick="event.stopPropagation();confirmDeleteBucketItem('${b.id}','${b.text.replace(/'/g,"\\'")}')">✕</button>
     </div>`).join('');
 }
-
 function openBucketModal(){
   document.getElementById('bucket-text-input').value = '';
   openModal('bucket-modal');
@@ -1703,14 +1683,11 @@ function confirmDeleteBucketItem(id, text){
   });
 }
 
-
-
 /* ════════════════════════
    BIRTHDAY COUNTDOWNS
 ════════════════════════ */
 function setupBirthdays(){
-  const today = new Date();
-  today.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
   const birthdays = [
     { id:'jm',     month:6,  day:19 },
     { id:'cherry', month:2,  day:11 },
@@ -1723,20 +1700,17 @@ function setupBirthdays(){
     const countEl  = document.getElementById('bday-count-'+b.id);
     const subEl    = document.getElementById('bday-sub-'+b.id);
     const cardEl   = document.getElementById('bday-'+b.id);
-    if(days === 0){
-      countEl.textContent = '🎉';
-      subEl.textContent   = 'Happy Birthday!';
-      cardEl.classList.add('bday-today');
-      spawnConfetti(b.id);
+    if(days===0){
+      countEl.textContent = '🎉'; subEl.textContent = 'Happy Birthday!';
+      cardEl.classList.add('bday-today'); spawnConfetti(b.id);
     } else {
       countEl.textContent = days;
-      subEl.textContent   = days === 1 ? 'day away 🎀' : 'days away 🎀';
+      subEl.textContent   = days===1 ? 'day away 🎀' : 'days away 🎀';
     }
   });
 }
-
 function spawnConfetti(id){
-  const wrap = document.getElementById('confetti-'+id);
+  const wrap   = document.getElementById('confetti-'+id);
   const colors = id==='jm'
     ? ['#a8d8f0','#7ac4e8','#c8e8ff','#ffffff','#5aafe0']
     : ['#ffc0cb','#ffd6de','#ff9aad','#ffffff','#e8899a'];
@@ -1750,8 +1724,6 @@ function spawnConfetti(id){
 
 /* ════════════════════════
    FALLING PETALS
-   Original oval/bezier style
-   inner glow + vein line
 ════════════════════════ */
 (function(){
   const canvas = document.getElementById('petal-canvas');
@@ -1760,7 +1732,6 @@ function spawnConfetti(id){
   function resize(){ canvas.width=phone.clientWidth; canvas.height=phone.clientHeight; }
   resize(); window.addEventListener('resize', resize);
   const W = () => canvas.width, H = () => canvas.height;
-
   const PALETTES = [
     {inner:'#fde8ed',outer:'#f4a7b5',vein:'#e8637a'},
     {inner:'#fff0f3',outer:'#fce8ed',vein:'#f4a7b5'},
@@ -1769,7 +1740,6 @@ function spawnConfetti(id){
     {inner:'#fde4ea',outer:'#f9c8d4',vein:'#e8637a'},
     {inner:'#ffffff',outer:'#ffd6de',vein:'#ffc0cb'},
   ];
-
   function mkp(seedY){
     const p = PALETTES[Math.floor(Math.random()*PALETTES.length)];
     return {
@@ -1777,12 +1747,11 @@ function spawnConfetti(id){
       r:5+Math.random()*8, rot:Math.random()*Math.PI*2,
       rotSpeed:(Math.random()-.5)*.025,
       speed:.4+Math.random()*.9,
-      sway:Math.random()*Math.PI*2,   swaySpeed:.007+Math.random()*.013, swayAmt:.6+Math.random()*1.2,
+      sway:Math.random()*Math.PI*2, swaySpeed:.007+Math.random()*.013, swayAmt:.6+Math.random()*1.2,
       wobble:Math.random()*Math.PI*2, wobbleSpeed:.02+Math.random()*.015,
       alpha:.45+Math.random()*.45, ci:p.inner, co:p.outer, cv:p.vein,
     };
   }
-
   function drawPetal(p){
     ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.globalAlpha=p.alpha;
     const r=p.r;
@@ -1797,7 +1766,6 @@ function spawnConfetti(id){
     ctx.strokeStyle=p.cv; ctx.lineWidth=.55; ctx.globalAlpha=p.alpha*.38; ctx.stroke();
     ctx.restore();
   }
-
   const petals = Array.from({length:34}, () => mkp(true));
   (function loop(){
     ctx.clearRect(0,0,W(),H());
